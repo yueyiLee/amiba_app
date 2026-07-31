@@ -14,7 +14,10 @@
     "cliVersion": "4.0.16",
     "unibestVersion": "4.4.1",
     "unibestUpdateTime": "2026-05-22",
-    "createdAt": "2026-07-31 10:54:18"
+    "createdAt": "2026-07-31 10:54:18",
+    "charts": {
+      "ucharts": true
+    }
   },
   "packageManager": "pnpm@10.10.0",
   "description": "unibest - 最好的 uniapp 开发模板",
