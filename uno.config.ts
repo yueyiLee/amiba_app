@@ -93,6 +93,17 @@ export default defineConfig({
     'i-carbon-building',
     'i-carbon-warning-alt',
     'i-carbon-phone',
+    // 记录页 + 收支表单
+    'i-carbon-calendar',
+    'i-carbon-wallet',
+    'i-carbon-shopping-cart',
+    'i-carbon-person',
+    'i-carbon-store',
+    'i-carbon-arrow-up',
+    'i-carbon-arrow-down',
+    'i-carbon-close',
+    'i-carbon-money',
+    'i-carbon-chevron-down',
   ],
   rules: [
     [
