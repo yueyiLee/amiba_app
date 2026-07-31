@@ -9,7 +9,7 @@ import { ref } from 'vue'
 definePage({
   style: {
     navigationStyle: 'custom',
-    navigationBarTitleText: '',
+    navigationBarTitleText: '用户登录',
   },
 })
 
@@ -158,14 +158,14 @@ async function doLogin() {
         <input
           v-model="password"
           class="form-input"
-          :type="showPassword ? 'text' : 'password'"
+          :password="!showPassword"
           placeholder="请输入密码"
           :maxlength="30"
           cursor-color="#2756D6"
         >
         <view class="input-suffix" @click="showPassword = !showPassword">
           <text class="suffix-icon">
-            {{ showPassword ? '◉' : '◌' }}
+            {{ showPassword ? '🙈' : '👁' }}
           </text>
         </view>
       </view>

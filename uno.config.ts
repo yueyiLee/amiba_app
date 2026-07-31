@@ -79,6 +79,20 @@ export default defineConfig({
     'i-carbon-user',
     'i-carbon-ibm-watson-language-translator',
     'i-carbon-menu',
+    // 我的页 / 客户管理 / 商品管理 用到的图标
+    'i-carbon-catalog',
+    'i-carbon-cube',
+    'i-carbon-document',
+    'i-carbon-inventory-management',
+    'i-carbon-group',
+    'i-carbon-settings',
+    'i-carbon-chevron-right',
+    'i-carbon-search',
+    'i-carbon-add',
+    'i-carbon-arrow-left',
+    'i-carbon-building',
+    'i-carbon-warning-alt',
+    'i-carbon-phone',
   ],
   rules: [
     [

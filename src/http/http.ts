@@ -106,10 +106,14 @@ export function http<T>(options: CustomRequestOptions) {
           }))
         }
 
-        // 处理其他成功状态（HTTP状态码200-299）
+        // 处理成功状态（HTTP状态码200-299）
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          // 处理业务逻辑错误
-          if (!isSuccessResultCode(code as number)) {
+          // 后端响应分两种格式：
+          // 1) 标准包装：{ code, data, message }，code 为成功码(0/200) 时取 data；
+          // 2) 扁平 JSON：直接返回业务数据，无 code 字段（现有后端 /api/... 业务接口）。
+          const isWrapped = code !== undefined && code !== null
+          // 仅对包装格式做业务码校验，扁平格式视为成功
+          if (isWrapped && !isSuccessResultCode(code as number)) {
             const httpError = createHttpError({
               type: HttpErrorType.Business,
               code,
@@ -127,7 +131,8 @@ export function http<T>(options: CustomRequestOptions) {
             }
             return reject(httpError)
           }
-          return resolve(responseData.data as T)
+          // 扁平响应直接返回整体；包装响应返回 data
+          return resolve((isWrapped ? responseData.data : res.data) as T)
         }
 
         // 处理其他错误
