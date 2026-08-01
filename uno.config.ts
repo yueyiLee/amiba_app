@@ -109,10 +109,14 @@ export default defineConfig({
     // 分析页（tabbar + 驾驶舱 + 各面板占位）
     'i-carbon-chart-line-data',
     'i-carbon-warning',
+    'i-carbon-warning-alt-filled',
     'i-carbon-checkmark-outline',
     'i-carbon-trophy',
     'i-carbon-chart-column',
     'i-carbon-hourglass',
+    'i-carbon-chart-bar-overlay',
+    'i-carbon-table',
+    'i-carbon-package',
   ],
   rules: [
     [

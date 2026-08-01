@@ -92,3 +92,251 @@ export interface ICockpitData {
    */
   unit_hours_available: boolean
 }
+
+/**
+ * 客户分析（PRD 5.4.2）
+ */
+
+/** 客户分析 3 项 KPI */
+export interface ICustomerKpi {
+  /** 累计客户数 */
+  customer_count: number
+  /** 近 90 天有交易的活跃客户数 */
+  active_count: number
+  /** 待回款金额（销售收入 − 现金收入） */
+  total_receivable: number
+}
+
+/** Top 客户贡献行 */
+export interface ICustomerTop {
+  customer_id: number
+  customer_name: string
+  /** 销售额 */
+  sale: number
+  /** 回款额 */
+  cash: number
+  /** 应收 = sale − cash */
+  receivable: number
+  /** 毛利率 */
+  gm: number
+  /** 最近交易日期 */
+  last_date: string
+  /** 账龄（天） */
+  age_days: number
+}
+
+/** 应收账龄分段 */
+export interface ICustomerAging {
+  buckets: {
+    within30: number
+    within60: number
+    over60: number
+  }
+  /** 三段合计 */
+  total: number
+}
+
+/** 客户分层条目 */
+export interface ICustomerTierItem {
+  name: string
+  sale: number
+  tier: 'A' | 'B' | 'C'
+}
+
+/** 客户分层汇总 */
+export interface ICustomerTiers {
+  list: ICustomerTierItem[]
+  summary: { A: number, B: number, C: number }
+  amounts: { A: number, B: number, C: number }
+}
+
+/** 客户分析聚合数据（后端 /api/analysis/customer 返回） */
+export interface ICustomerData {
+  kpi: ICustomerKpi
+  top5: ICustomerTop[]
+  aging: ICustomerAging
+  tiers: ICustomerTiers
+}
+
+/**
+ * 商品分析（PRD 5.4.3）
+ */
+
+/** 商品分析 3 项 KPI */
+export interface IProductKpi {
+  /** 在售商品 SKU 数 */
+  sku_count: number
+  /** 库存占用（在库金额） */
+  inventory_value: number
+  /** 平均毛利率（0-1 小数） */
+  avg_gm: number
+}
+
+/** Top 商品销售行 */
+export interface IProductTop {
+  product_id: number
+  product_name: string
+  /** 销售额 */
+  sale: number
+  /** 毛利率（0-1 小数） */
+  gm: number
+  /** 当前库存数量 */
+  stock: number
+  /** 周转天数 */
+  turnover_days: number
+}
+
+/** 商品预警项 */
+export interface IProductAlert {
+  level: 'red' | 'yellow'
+  product_name: string
+  product_id: number
+  reason: string
+  /** 预警类型：low_margin / low_stock / slow_turnover */
+  type: 'low_margin' | 'low_stock' | 'slow_turnover'
+}
+
+/** 商品分析聚合数据（后端 /api/analysis/product 返回） */
+export interface IProductData {
+  kpi: IProductKpi
+  top_products: IProductTop[]
+  alerts: IProductAlert[]
+  alert_count: { red: number, yellow: number }
+}
+
+/**
+ * 合同分析（PRD 5.4.4）
+ */
+
+/** 合同分析 4 项 KPI */
+export interface IContractKpi {
+  /** 合同总额（本期签约） */
+  total_amount: number
+  /** 执行率 = 回款 / 合同金额（0-1 小数） */
+  execution_rate: number
+  /** 未回款金额 */
+  unpaid_amount: number
+  /** 按状态汇总 */
+  status_summary: {
+    in_progress: { count: number, amount: number }
+    completed: { count: number, amount: number }
+    dunning: { count: number, amount: number }
+  }
+}
+
+/** 合同执行列表行 */
+export interface IContractRow {
+  id: number
+  customer_name: string
+  date: string
+  /** 合同金额 */
+  amount: number
+  /** 已回款 */
+  paid: number
+  /** 未回款 */
+  unpaid: number
+  /** 状态：进行中 / 已完结 / 催收中 */
+  status: string
+  /** 账龄（天） */
+  age_days: number
+}
+
+/** 合同分析聚合数据（后端 /api/analysis/contract 返回） */
+export interface IContractData {
+  kpi: IContractKpi
+  contracts: IContractRow[]
+}
+
+/**
+ * 费用分析（PRD 5.4.5）
+ */
+
+/** 费用构成条目 */
+export interface IExpenseComposeItem {
+  /** 费用类别名称（如"材料采购"/"员工工资"/"杂费支出"） */
+  name: string
+  /** 金额 */
+  amount: number
+}
+
+/** 费用趋势月度数据点 */
+export interface IExpenseTrendPoint {
+  /** 月份 YYYY-MM */
+  month: string
+  /** 该月支出总额 */
+  amount: number
+}
+
+/** 单元费用条目 */
+export interface IExpenseUnitItem {
+  /** 单元名称 */
+  unit: string
+  /** 费用金额 */
+  amount: number
+}
+
+/** 费用分析聚合数据（后端 /api/analysis/expense 返回） */
+export interface IExpenseData {
+  /** 费用构成列表 */
+  compose: IExpenseComposeItem[]
+  /** 总支出 */
+  total_expense: number
+  /** 近 6 个月费用趋势 */
+  trend: IExpenseTrendPoint[]
+  /** 各单元费用 */
+  units: IExpenseUnitItem[]
+  /** 单元费用合计 */
+  unit_total: number
+}
+
+/**
+ * 阿米巴核算（PRD 5.4.6）
+ */
+
+/** 阿米巴核算 4 项 KPI */
+export interface IAmoebaKpi {
+  /** 附加价值总额 = 总收入 − 消耗成本 − 杂费 */
+  added_value: number
+  /** 总劳动时间（小时） */
+  total_hours: number
+  /** 单位时间劳务费 = 总劳务费 / 总工时 */
+  hourly_labor_cost: number
+  /** 盈亏临界 = 附加值 − 劳务费，盈余为正 */
+  breakeven: number
+}
+
+/** 各单元单位时间附加值条目 */
+export interface IAmoebaUnitValue {
+  unit: string
+  added_value: number
+}
+
+/** 单元总贡献行 */
+export interface IAmoebaUnitContrib {
+  unit: string
+  /** 销售额 */
+  sales: number
+  /** 经费（材料+加工+杂费） */
+  expense: number
+  /** 附加价值总额 */
+  added_value: number
+  /** 工时（不可用时为 null） */
+  hours: number | null
+  /** 单位时间附加值（不可用时为 null） */
+  hourly_value: number | null
+}
+
+/** 阿米巴核算聚合数据（后端 /api/analysis/amoeba 返回） */
+export interface IAmoebaData {
+  kpi: IAmoebaKpi
+  /** 本月整体单位时间附加值（¥/人·小时） */
+  hourly_added_value: number
+  /** 上月单位时间附加值，null 表示无数据 */
+  prev_hourly_added_value: number | null
+  /** 各单元附加价值 */
+  unit_values: IAmoebaUnitValue[]
+  /** 各单元总贡献 */
+  unit_contribs: IAmoebaUnitContrib[]
+  /** 单元工时是否可用（恒为 false） */
+  unit_hours_available: boolean
+}

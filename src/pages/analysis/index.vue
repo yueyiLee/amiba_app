@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import dayjs from 'dayjs'
-import { ALL_UNITS, getCockpit } from '@/api/analysis'
-import type { AnalysisSeg, ICockpitData } from '@/api/types/analysis'
+import { ALL_UNITS, getCockpit, getCustomerAnalysis, getProductAnalysis, getContractAnalysis, getExpenseAnalysis, getAmoebaAnalysis } from '@/api/analysis'
+import type { AnalysisSeg, ICockpitData, ICustomerData, IProductData, IContractData, IExpenseData, IAmoebaData } from '@/api/types/analysis'
 
 definePage({
   style: {
@@ -20,35 +20,85 @@ const monthText = computed(() => `${currentDate.value.year()}年${currentDate.va
 // 本期仅支持「全部单元」，待单元数据模型明确后再接入具体单元
 const currentUnit = ref(ALL_UNITS)
 
-// 驾驶舱数据
+// 各面板数据 / 加载 / 错误状态
 const cockpit = ref<ICockpitData | null>(null)
-const loading = ref(false)
-const error = ref<string | null>(null)
+const cockpitLoading = ref(false)
+const cockpitError = ref<string | null>(null)
 
-/** 请求去重：记录最后一次请求的月份，避免重复请求 */
-let lastRequestedMonth = ''
+const customerData = ref<ICustomerData | null>(null)
+const customerLoading = ref(false)
+const customerError = ref<string | null>(null)
 
-/** 加载驾驶舱聚合数据 */
-async function loadCockpit() {
-  const month = currentMonth.value
-  if (loading.value && lastRequestedMonth === month) {
-    return // 已有相同月份的在途请求，跳过
-  }
-  lastRequestedMonth = month
-  loading.value = true
-  error.value = null
+const productData = ref<IProductData | null>(null)
+const productLoading = ref(false)
+const productError = ref<string | null>(null)
+
+const contractData = ref<IContractData | null>(null)
+const contractLoading = ref(false)
+const contractError = ref<string | null>(null)
+
+const expenseData = ref<IExpenseData | null>(null)
+const expenseLoading = ref(false)
+const expenseError = ref<string | null>(null)
+
+const amoebaData = ref<IAmoebaData | null>(null)
+const amoebaLoading = ref(false)
+const amoebaError = ref<string | null>(null)
+
+/** 各面板 API 加载函数映射（返回 [data, loading, error] 对应 ref） */
+const PANEL_CONFIG: Record<AnalysisSeg, {
+  loader: (month: string) => Promise<unknown>
+  data: { value: unknown }
+  loading: { value: boolean }
+  error: { value: string | null }
+}> = {
+  overview: {
+    loader: (m) => getCockpit(m, currentUnit.value),
+    data: cockpit, loading: cockpitLoading, error: cockpitError,
+  },
+  customer: { loader: getCustomerAnalysis, data: customerData, loading: customerLoading, error: customerError },
+  product: { loader: getProductAnalysis, data: productData, loading: productLoading, error: productError },
+  contract: { loader: getContractAnalysis, data: contractData, loading: contractLoading, error: contractError },
+  expense: { loader: getExpenseAnalysis, data: expenseData, loading: expenseLoading, error: expenseError },
+  amoeba: { loader: getAmoebaAnalysis, data: amoebaData, loading: amoebaLoading, error: amoebaError },
+}
+
+/** 已加载的面板集合，避免重复请求 */
+const loadedSegs = new Set<AnalysisSeg>()
+
+/** 统一加载面板数据（按需、去重、错误处理） */
+async function loadPanel(seg: AnalysisSeg, force = false) {
+  const panel = PANEL_CONFIG[seg]
+  if (panel.loading.value) return // 已有在途请求
+  if (!force && loadedSegs.has(seg)) return // 已加载过，避免重复请求
+  panel.loading.value = true
+  panel.error.value = null
   try {
-    cockpit.value = await getCockpit(month, currentUnit.value)
+    panel.data.value = await panel.loader(currentMonth.value)
+    loadedSegs.add(seg)
   }
   catch (e) {
-    console.error('[analysis] loadCockpit failed:', e)
-    cockpit.value = null
-    error.value = '数据加载失败，请下拉刷新或切换月份重试'
+    console.error(`[analysis] loadPanel(${seg}) failed:`, e)
+    panel.data.value = null
+    panel.error.value = '数据加载失败，请重试'
   }
   finally {
-    loading.value = false
+    panel.loading.value = false
   }
 }
+
+/** 当前面板的错误信息（供模板提示用） */
+const activeError = computed(() => PANEL_CONFIG[activeSeg.value].error.value)
+
+/** 切换面板时按需加载对应数据 */
+function loadForSeg(seg: AnalysisSeg) {
+  loadPanel(seg)
+}
+
+// 监听宫格切换，按需加载当前面板数据
+watch(activeSeg, (seg) => {
+  loadForSeg(seg)
+})
 
 // 月份选择器
 const monthPickerRef = ref<any>(null)
@@ -64,20 +114,23 @@ function onMonthConfirm({ value }: { value: number }) {
     return
   }
   currentDate.value = dayjs(value)
-  loadCockpit()
+  // 月份变化后清空缓存，强制刷新所有已加载面板
+  loadedSegs.clear()
+  loadForSeg(activeSeg.value)
 }
 
 function openUnitPicker() {
   uni.showToast({ title: '暂仅支持全部单元', icon: 'none' })
 }
 
-/** 预警 / Top 榜点击后切换到对应分析面板 */
+/** 预警 / Top 榜点击后切换到对应分析面板，并按需加载数据 */
 function onNavigate(seg: AnalysisSeg) {
   activeSeg.value = seg
+  loadForSeg(seg)
 }
 
 onShow(() => {
-  loadCockpit()
+  loadForSeg(activeSeg.value)
 })
 </script>
 
@@ -125,15 +178,18 @@ onShow(() => {
 
     <!-- 面板区：v-show 即时切换，共享筛选状态，切换不触发请求 -->
     <view class="mx-[24rpx] mb-[200rpx] mt-[20rpx]">
-      <!-- 加载失败时的错误提示 -->
-      <view v-if="error && activeSeg === 'overview'" class="mb-[20rpx] rounded-[20rpx] bg-[#FFF3F0] px-[28rpx] py-[24rpx]">
+      <!-- 当前面板加载失败时的错误提示 -->
+      <view
+        v-if="activeError"
+        class="mb-[20rpx] rounded-[20rpx] bg-[#FFF3F0] px-[28rpx] py-[24rpx]"
+      >
         <view class="flex items-center gap-[12rpx]">
           <text class="i-carbon-warning-alt-filled text-[32rpx] text-[#E5484D]" />
-          <text class="flex-1 text-[26rpx] text-[#E5484D]">{{ error }}</text>
+          <text class="flex-1 text-[26rpx] text-[#E5484D]">{{ activeError }}</text>
           <text
             class="shrink-0 text-[26rpx] text-[#E5484D] font-medium"
             hover-class="opacity-60"
-            @click="loadCockpit"
+            @click="loadPanel(activeSeg, true)"
           >
             重试
           </text>
@@ -142,14 +198,34 @@ onShow(() => {
       <CockpitPanel
         v-show="activeSeg === 'overview'"
         :data="cockpit"
-        :loading="loading"
+        :loading="cockpitLoading"
         @navigate="onNavigate"
       />
-      <CustomerPanel v-show="activeSeg === 'customer'" />
-      <ProductPanel v-show="activeSeg === 'product'" />
-      <ContractPanel v-show="activeSeg === 'contract'" />
-      <ExpensePanel v-show="activeSeg === 'expense'" />
-      <AmoebaPanel v-show="activeSeg === 'amoeba'" />
+      <CustomerPanel
+        v-show="activeSeg === 'customer'"
+        :data="customerData"
+        :loading="customerLoading"
+      />
+      <ProductPanel
+        v-show="activeSeg === 'product'"
+        :data="productData"
+        :loading="productLoading"
+      />
+      <ContractPanel
+        v-show="activeSeg === 'contract'"
+        :data="contractData"
+        :loading="contractLoading"
+      />
+      <ExpensePanel
+        v-show="activeSeg === 'expense'"
+        :data="expenseData"
+        :loading="expenseLoading"
+      />
+      <AmoebaPanel
+        v-show="activeSeg === 'amoeba'"
+        :data="amoebaData"
+        :loading="amoebaLoading"
+      />
     </view>
   </view>
 </template>

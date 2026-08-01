@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { computed } from 'vue'
 import type { AnalysisSeg, ICockpitData, KpiTone } from '@/api/types/analysis'
 import { formatAmount } from '@/utils/format'
 

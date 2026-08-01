@@ -11,7 +11,6 @@ defineOptions({
 definePage({
   type: 'home',
   style: {
-    navigationStyle: 'custom',
     navigationBarTitleText: '记录',
   },
 })
