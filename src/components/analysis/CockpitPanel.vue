@@ -69,8 +69,8 @@ const alertSummary = computed(() => {
 <template>
   <view class="flex flex-col gap-[24rpx]">
     <!-- 核心 KPI：一行三列，共 6 张 -->
-    <view class="mx-[-8rpx] flex flex-wrap">
-      <view v-for="item in kpiList" :key="item.key" class="w-[46%] p-[8rpx]">
+    <view class="mx-[-8rpx] flex flex-wrap justify-between">
+      <view v-for="item in kpiList" :key="item.key" class="w-[45%] p-[8rpx]">
         <KpiCard :label="item.label" :value="item.value" :desc="item.desc" :tone="item.tone" />
       </view>
     </view>

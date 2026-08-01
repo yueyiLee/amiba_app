@@ -77,7 +77,7 @@ function ageColor(days: number): string {
 <template>
   <view class="flex flex-col gap-[24rpx]">
     <!-- 4 张 KPI 卡片：一行两列 -->
-    <view class="mx-[-8rpx] flex flex-wrap">
+    <view class="mx-[-8rpx] flex flex-wrap justify-between">
       <view v-for="k in kpiList" :key="k.key" class="w-[45%] p-[8rpx]">
         <KpiCard :label="k.label" :value="k.value" :desc="k.desc" :tone="k.tone" />
       </view>
