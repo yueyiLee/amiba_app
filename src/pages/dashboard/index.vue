@@ -7,7 +7,6 @@ import { formatAmount } from '@/api/types/transaction'
 
 definePage({
   style: {
-    navigationStyle: 'custom',
     navigationBarTitleText: '看板',
   },
 })

@@ -104,6 +104,15 @@ export default defineConfig({
     'i-carbon-close',
     'i-carbon-money',
     'i-carbon-chevron-down',
+    // 看板 tabbar
+    'i-carbon-dashboard',
+    // 分析页（tabbar + 驾驶舱 + 各面板占位）
+    'i-carbon-chart-line-data',
+    'i-carbon-warning',
+    'i-carbon-checkmark-outline',
+    'i-carbon-trophy',
+    'i-carbon-chart-column',
+    'i-carbon-hourglass',
   ],
   rules: [
     [

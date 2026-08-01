@@ -53,10 +53,8 @@ export interface ITransactionGroup {
   items: ITransactionItem[]
 }
 
-/** 千分位格式化金额（保留两位小数） */
-export function formatAmount(amount: number): string {
-  const fixed = amount.toFixed(2)
-  const [intPart, decPart] = fixed.split('.')
-  const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-  return `${formattedInt}.${decPart}`
-}
+/**
+ * 千分位格式化金额（保留两位小数），对 NaN/Infinity 安全防御。
+ * @deprecated 请改用 @/utils/format 中的 formatAmount，该文件提供了安全的 isFinite 防御。
+ */
+export { formatAmount } from '@/utils/format'
