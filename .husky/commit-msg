@@ -1,1 +1,4 @@
-npx --no-install commitlint --edit "$1"
+PROJECT_ROOT="$(cd "$(dirname -- "$0")/.." && pwd)"
+
+# 使用项目本地安装的 commitlint，避免依赖全局 npx
+"$PROJECT_ROOT/node_modules/.bin/commitlint" --edit "$1"

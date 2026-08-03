@@ -2,6 +2,7 @@
 import type { ITransactionGroup, ITransactionItem } from '@/api/types/transaction'
 import { formatAmount, isIncome } from '@/api/types/transaction'
 import { getTransactionList } from '@/api/transaction'
+import DateRangePicker from '@/components/DateRangePicker.vue'
 import { useUserStore } from '@/store/user'
 import dayjs from 'dayjs'
 
@@ -17,18 +18,11 @@ definePage({
 
 const userStore = useUserStore()
 
-// 当前展示的月份
-const currentDate = ref(dayjs())
-const currentMonth = computed(() => currentDate.value.format('YYYY-M'))
-
-// 月份选择器（wot-ui 的 wd-calendar，type=month）
-const monthPickerRef = ref<any>(null)
-const monthPickerValue = computed(() => currentDate.value.valueOf())
-
-/** 打开月份选择器 */
-function openMonthPicker() {
-  monthPickerRef.value?.open()
-}
+// 当前日期范围
+const dateRange = ref<[string, string] | null>([
+  dayjs().startOf('month').format('YYYY-MM-DD'),
+  dayjs().format('YYYY-MM-DD'),
+])
 
 // 企业名称
 const companyName = computed(() => userStore.userInfo.companyName || '')
@@ -46,18 +40,12 @@ const loading = ref(false)
 const showSearch = ref(false)
 const searchKeyword = ref('')
 
-// 格式化月份显示，如 "2026年7月"
-const displayMonth = computed(() => {
-  const d = currentDate.value
-  return `${d.year()}年${d.month() + 1}月`
-})
-
 // 星期映射
 const WEEK_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
 /** 获取某月第一天所属的 month 参数（YYYY-MM） */
-function getMonthKey(date: dayjs.Dayjs): string {
-  return date.format('YYYY-MM')
+function getMonthKey(date: string): string {
+  return dayjs(date).format('YYYY-MM')
 }
 
 /** 将流水列表按日期分组 */
@@ -93,7 +81,7 @@ function calcSummary(list: ITransactionItem[]) {
 async function loadData() {
   loading.value = true
   try {
-    const monthKey = getMonthKey(currentDate.value)
+    const monthKey = getMonthKey(dateRange.value?.[0] ?? dayjs().format('YYYY-MM-DD'))
     const listRes = await getTransactionList(monthKey)
     summary.value = calcSummary(listRes)
     transactionGroups.value = groupByDate(listRes)
@@ -108,9 +96,9 @@ async function loadData() {
   }
 }
 
-/** 确认月份选择（value 为选中月第一天的时间戳） */
-function onMonthConfirm({ value }: { value: number }) {
-  currentDate.value = dayjs(value)
+/** 确认日期范围选择 */
+function onDateRangeConfirm({ start_date, end_date }: { start_date: string, end_date: string }) {
+  dateRange.value = [start_date, end_date]
   loadData()
 }
 
@@ -185,26 +173,12 @@ onShow(() => {
       />
     </view>
 
-    <!-- 月份选择器 -->
-    <view class="flex items-center justify-between px-[32rpx] mb-[24rpx]">
-      <view
-        class="flex items-center gap-[12rpx]"
-        hover-class="opacity-60"
-        @click="openMonthPicker"
-      >
-        <text class="text-[32rpx] font-bold text-[#1F2329]">{{ displayMonth }}</text>
-        <text class="i-carbon-chevron-down text-[28rpx] text-[#6B7280]" />
-      </view>
-      <wd-calendar
-        ref="monthPickerRef"
-        v-model="monthPickerValue"
-        type="month"
-        :with-cell="false"
-        :min-date="dayjs().subtract(10, 'year').valueOf()"
-        :max-date="dayjs().valueOf()"
-        :z-index="2000"
-        :root-portal="true"
-        @confirm="onMonthConfirm"
+    <!-- 日期范围选择器 -->
+    <view class="px-[32rpx] mb-[24rpx]">
+      <DateRangePicker
+        v-model="dateRange"
+        @confirm="onDateRangeConfirm"
+        placeholder="请选择日期"
       />
     </view>
 

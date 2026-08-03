@@ -1,1 +1,4 @@
-npx lint-staged --allow-empty
+PROJECT_ROOT="$(cd "$(dirname -- "$0")/.." && pwd)"
+
+# 使用项目本地安装的 lint-staged，避免依赖全局 npx
+"$PROJECT_ROOT/node_modules/.bin/lint-staged" --allow-empty
