@@ -45,6 +45,14 @@ export function isIncome(item: ITransactionItem): boolean {
   return item.amount > 0
 }
 
+/** 支出项子类别（来自 GET /api/expense-items） */
+export interface IExpenseItem {
+  id: number
+  kind: string   // 'misc' | 'processing' | ...
+  name: string
+  note: string
+}
+
 /** 收入/支出表单提交数据 */
 export interface ITransactionForm {
   amount: number
@@ -58,6 +66,8 @@ export interface ITransactionForm {
   product_id?: number
   /** 关联的合同 id */
   contract_id?: number
+  /** 杂费子类别名称（当 type === '杂费支出' 时必填） */
+  category?: string
   notes?: string
 }
 

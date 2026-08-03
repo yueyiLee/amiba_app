@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { createTransaction, getExpenseTypes } from '@/api/transaction'
-import { type ITransactionForm, type IExpenseType } from '@/api/types/transaction'
+import { createTransaction, getExpenseTypes, getExpenseItems } from '@/api/transaction'
+import { type ITransactionForm, type IExpenseType, type IExpenseItem } from '@/api/types/transaction'
 import { getCustomers } from '@/api/customer'
 import { getProducts } from '@/api/product'
 import type { ICustomer } from '@/api/types/customer'
@@ -29,6 +29,7 @@ const form = reactive<ITransactionForm>({
   product: '',
   product_id: undefined,
   contract_id: undefined,
+  category: '',
   notes: '',
 })
 
@@ -62,6 +63,20 @@ const showCustomer = computed(() => currentExpenseType.value?.linkCustomer ?? fa
 
 /** 是否显示商品选择器（由当前选中类型的 linkProduct 决定） */
 const showProduct = computed(() => currentExpenseType.value?.linkProduct ?? false)
+
+// 杂费子类别（从后端获取，按 linkCat 过滤）
+const expenseItems = ref<IExpenseItem[]>([])
+const sundryPickerRef = ref<any>(null)
+/** 当前类型关联的子类别列表（按 linkCat 过滤，如 kind === 'misc'） */
+const sundryItemOptions = computed(() =>
+  expenseItems.value
+    .filter(e => e.kind === currentExpenseType.value?.linkCat)
+    .map(e => ({ value: e.name, label: e.name })),
+)
+/** 是否显示杂费类别选择器（linkCat 非空时显示，目前仅 'misc' 有值） */
+const showSundry = computed(() => !!currentExpenseType.value?.linkCat)
+/** 杂费类别校验错误状态（控制红色高亮边框） */
+const sundryError = ref(false)
 
 // ========== 根据 direction 动态计算的属性 ==========
 
@@ -156,17 +171,24 @@ watch(() => form.type, () => {
     form.product = ''
     form.product_id = undefined
   }
+  if (!showSundry.value) {
+    form.category = ''
+    sundryError.value = false
+  }
 })
 
 // ========== 数据加载 ==========
 
 onMounted(async () => {
   try {
-    const [c, p, types, ctrs] = await Promise.all([getCustomers(), getProducts(), getExpenseTypes(), getContracts()])
+    const [c, p, types, ctrs, items] = await Promise.all([
+      getCustomers(), getProducts(), getExpenseTypes(), getContracts(), getExpenseItems(),
+    ])
     customers.value = c
     products.value = p
     expenseTypes.value = types
     contracts.value = ctrs
+    expenseItems.value = items
     // 类型数据就绪后，若当前默认 type 不在列表中则自动切到第一个
     if (!typeOptions.value.includes(form.type)) {
       form.type = typeOptions.value[0] || form.type
@@ -197,6 +219,12 @@ function onProductConfirm({ value }: { value: number }) {
 /** 选择合同 */
 function onContractConfirm({ value }: { value: number }) {
   form.contract_id = value
+}
+
+/** 选择杂费子类别 */
+function onSundryConfirm({ value }: { value: string }) {
+  form.category = value
+  sundryError.value = false
 }
 
 // 金额输入防抖
@@ -239,11 +267,18 @@ async function onSubmit() {
     uni.showToast({ title: validateTypeMsg.value, icon: 'none' })
     return
   }
+  // 杂费支出强制选择杂费类别
+  if (showSundry.value && !form.category) {
+    sundryError.value = true
+    uni.showToast({ title: '请选择杂费类别', icon: 'none' })
+    return
+  }
   if (saving.value)
     return
   saving.value = true
   try {
     await createTransaction({ ...form }, direction.value)
+    sundryError.value = false
     uni.showToast({ title: successToastMsg.value, icon: 'success' })
     setTimeout(() => uni.navigateBack(), 500)
   }
@@ -338,6 +373,36 @@ async function onSubmit() {
             {{ t }}
           </view>
         </view>
+      </view>
+
+      <!-- 杂费类别（仅当类型关联子类别时显示，如「杂费支出」关联 misc） -->
+      <view v-if="showSundry" class="mb-[28rpx]">
+        <view class="text-[26rpx] font-semibold text-[#1F2329] mb-[12rpx]">
+          杂费类别 <text class="text-[#E5484D]">*</text>
+        </view>
+        <view
+          class="h-[100rpx] bg-white rounded-[20rpx] border flex items-center justify-between px-[28rpx]"
+          :class="sundryError ? 'border-[#E5484D]' : 'border-[#E5E7EB]'"
+          hover-class="opacity-60"
+          @click="sundryPickerRef?.open()"
+        >
+          <text
+            class="text-[30rpx]"
+            :class="form.category ? 'text-[#1F2329]' : 'text-[#b6bcc6]'"
+          >{{ form.category || '选择杂费类别（必填）' }}</text>
+          <text class="i-carbon-chevron-down text-[32rpx] text-[#9AA1AC] ml-[16rpx]" />
+        </view>
+        <wd-select-picker
+          ref="sundryPickerRef"
+          v-model="form.category"
+          type="radio"
+          filterable
+          filter-placeholder="搜索杂费类别"
+          :columns="sundryItemOptions"
+          :z-index="2000"
+          :root-portal="true"
+          @confirm="onSundryConfirm"
+        />
       </view>
 
       <!-- 客户 / 供应商 -->
