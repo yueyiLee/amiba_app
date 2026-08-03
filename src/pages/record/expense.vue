@@ -121,7 +121,7 @@ async function onSubmit() {
     <!-- 表单提示 -->
     <view class="px-[32rpx] pt-[24rpx] pb-[28rpx]">
       <text class="text-[25rpx] text-[#6B7280] leading-relaxed">
-        绿色表示支出。保存后数据计入本企业本月支出。
+        绿色表示支出。保存后数据计入本企业指定日期的支出。
       </text>
     </view>
 
@@ -148,7 +148,7 @@ async function onSubmit() {
       <!-- 日期 -->
       <view class="mb-[28rpx]">
         <view class="text-[26rpx] font-semibold text-[#1F2329] mb-[12rpx]">
-          日期 <text class="text-[#E5484D]">*</text>
+          产生日期 <text class="text-[#E5484D]">*</text>
         </view>
         <view class="h-[100rpx] bg-white rounded-[20rpx] border border-[#E5E7EB] flex items-center px-[28rpx]">
           <picker
@@ -156,6 +156,7 @@ async function onSubmit() {
             :value="form.date"
             :end="dayjs().format('YYYY-MM-DD')"
             @change="onDateChange"
+            class="w-[100%]"
           >
             <view class="flex-1 flex items-center justify-between">
               <text class="text-[30rpx] text-[#1F2329]">{{ form.date }}</text>
