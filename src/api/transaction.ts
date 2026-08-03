@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 import { http } from '@/http/http'
-import type { ITransactionItem, ITransactionForm } from './types/transaction'
+import type { ITransactionItem, ITransactionForm, IExpenseType } from './types/transaction'
 
 /** 将月份字符串（YYYY-MM）转为后端所需的 startDate / endDate 区间 */
 export function monthToDateRange(month: string): { startDate: string, endDate: string } {
@@ -14,6 +14,11 @@ export function monthToDateRange(month: string): { startDate: string, endDate: s
 /** 获取指定月份的流水列表（按月度区间向后端查询） */
 export function getTransactionList(startDate: string, endDate:string): Promise<ITransactionItem[]> {
   return http.get<ITransactionItem[]>('/api/transactions', {startDate, endDate})
+}
+
+/** 获取收支类型列表（可按方向筛选，仅返回已启用的类型） */
+export function getExpenseTypes(direction?: 'income' | 'expense'): Promise<IExpenseType[]> {
+  return http.get<IExpenseType[]>('/api/expense-types', { direction, enabled: 'true' })
 }
 
 /**
@@ -35,5 +40,7 @@ export function createTransaction(form: ITransactionForm, direction: 'income' | 
     payload.customer_id = form.customer_id
   if (form.product_id != null)
     payload.product_id = form.product_id
+  if (form.contract_id != null)
+    payload.contract_id = form.contract_id
   return http.post<{ id: number }>('/api/transactions', payload)
 }

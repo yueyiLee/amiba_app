@@ -103,12 +103,12 @@ function onDateRangeConfirm({ start_date, end_date }: { start_date: string, end_
 
 /** 跳转到记一笔收入 */
 function goIncome() {
-  uni.navigateTo({ url: '/pages/record/income' })
+  uni.navigateTo({ url: '/pages/record/index?direction=income' })
 }
 
 /** 跳转到记一笔支出 */
 function goExpense() {
-  uni.navigateTo({ url: '/pages/record/expense' })
+  uni.navigateTo({ url: '/pages/record/index?direction=expense' })
 }
 
 /** 获取流水项的图标样式类 */
