@@ -119,6 +119,7 @@ function onConfirm() {
     if (isValidTimestamp(start) && isValidTimestamp(end)) {
       const startDate = dayjs(start).format('YYYY-MM-DD')
       const endDate = dayjs(end).format('YYYY-MM-DD')
+      console.info(startDate, endDate)
 
       emit('update:modelValue', [startDate, endDate])
       emit('confirm', { start_date: startDate, end_date: endDate })

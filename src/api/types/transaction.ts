@@ -1,14 +1,14 @@
 /** 收入类型 */
-export type IncomeType = '销售收款' | '服务收入' | '退款' | '其他收入'
+export type IncomeType = '销售收入' | '现金收入'  | '其他收入'
 
 /** 支出类型 */
-export type ExpenseType = '采购' | '工资' | '办公费' | '营销' | '其他'
+export type ExpenseType = '采购' | '办公费' | '营销' | '其他'
 
 /** 收入类型可选项 */
-export const INCOME_TYPES: IncomeType[] = ['销售收款', '服务收入', '退款', '其他收入']
+export const INCOME_TYPES: IncomeType[] = ['销售收入', '现金收入',  '其他收入']
 
 /** 支出类型可选项 */
-export const EXPENSE_TYPES: ExpenseType[] = ['采购', '工资', '办公费', '营销', '其他']
+export const EXPENSE_TYPES: ExpenseType[] = ['采购',  '办公费', '营销', '其他']
 
 /** 单笔流水记录（字段名与后端保持一致） */
 export interface ITransactionItem {

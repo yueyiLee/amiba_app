@@ -81,8 +81,7 @@ function calcSummary(list: ITransactionItem[]) {
 async function loadData() {
   loading.value = true
   try {
-    const monthKey = getMonthKey(dateRange.value?.[0] ?? dayjs().format('YYYY-MM-DD'))
-    const listRes = await getTransactionList(monthKey)
+    const listRes = await getTransactionList(dateRange.value[0], dateRange.value[1])
     summary.value = calcSummary(listRes)
     transactionGroups.value = groupByDate(listRes)
   }

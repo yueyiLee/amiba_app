@@ -12,8 +12,8 @@ export function monthToDateRange(month: string): { startDate: string, endDate: s
 }
 
 /** 获取指定月份的流水列表（按月度区间向后端查询） */
-export function getTransactionList(month: string): Promise<ITransactionItem[]> {
-  return http.get<ITransactionItem[]>('/api/transactions', monthToDateRange(month))
+export function getTransactionList(startDate: string, endDate:string): Promise<ITransactionItem[]> {
+  return http.get<ITransactionItem[]>('/api/transactions', {startDate, endDate})
 }
 
 /**
