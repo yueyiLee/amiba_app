@@ -8,24 +8,30 @@ const emit = defineEmits<{ 'update:modelValue': [AnalysisSeg] }>()
 </script>
 
 <template>
-  <!-- 两行三列网格：不使用横向滑动，保证 6 项同屏可见（PRD 5.4 强制要求） -->
-  <view class="flex flex-wrap justify-between rounded-[24rpx] bg-[#EEF1F6] p-[8rpx]">
-    <view
-      v-for="seg in ANALYSIS_SEGS"
-      :key="seg.key"
-      class="w-[30%] p-[4rpx]"
-      hover-class="opacity-60"
-      @click="emit('update:modelValue', seg.key)"
-    >
+  <!-- 两行三列网格：6 项同屏可见（PRD v2.1 §1.1） -->
+  <view class="rounded-[24rpx] bg-white border border-[#E5E7EB] p-[12rpx]">
+    <view class="grid grid-cols-3 gap-[8rpx]">
       <view
-        class="h-[72rpx] flex items-center justify-center rounded-[18rpx] text-[25rpx] font-semibold"
+        v-for="seg in ANALYSIS_SEGS"
+        :key="seg.key"
+        class="flex flex-col items-center justify-center rounded-[18rpx] py-[14rpx] px-[4rpx]"
         :class="
           modelValue === seg.key
-            ? 'bg-white text-[#2E6CF0] shadow-[0_2rpx_8rpx_rgba(46,108,240,0.12)]'
-            : 'text-[#6B7280]'
+            ? 'bg-[#FDECEC] border border-[#F7C9C9]'
+            : 'bg-[#FBFCFE] border border-[#EEF1F6]'
         "
+        hover-class="opacity-70"
+        @click="emit('update:modelValue', seg.key)"
       >
-        {{ seg.label }}
+        <text class="text-[36rpx] leading-none">
+          {{ seg.icon }}
+        </text>
+        <text
+          class="mt-[6rpx] text-[23rpx] font-semibold"
+          :class="modelValue === seg.key ? 'text-[#E5484D]' : 'text-[#6B7280]'"
+        >
+          {{ seg.label }}
+        </text>
       </view>
     </view>
   </view>

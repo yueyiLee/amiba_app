@@ -1,6 +1,6 @@
 import { http } from '@/http/http'
 import { monthToDateRange } from './transaction'
-import type { ICockpitData, ICustomerData, IProductData, IContractData, IExpenseData, IAmoebaData, IDailyTrendData, IInventoryListData, IDashboardV2Data } from './types/analysis'
+import type { ICockpitData, ICustomerData, IProductData, IContractData, IExpenseData, IAmoebaData, ICashData, IDailyTrendData, IInventoryListData, IDashboardV2Data } from './types/analysis'
 
 /** 单元筛选默认值（后端约定：'全部单元' 表示不过滤） */
 export const ALL_UNITS = '全部单元'
@@ -8,12 +8,10 @@ export const ALL_UNITS = '全部单元'
 /**
  * 获取分析驾驶舱聚合数据（6 项 KPI + 预警清单 + Top 榜）
  * @param month 月份 YYYY-MM
- * @param unit 阿米巴单元，默认「全部单元」
  */
-export function getCockpit(month: string, unit: string = ALL_UNITS): Promise<ICockpitData> {
+export function getCockpit(month: string): Promise<ICockpitData> {
   return http.get<ICockpitData>('/api/analysis/cockpit', {
     ...monthToDateRange(month),
-    unit,
   })
 }
 
@@ -64,6 +62,19 @@ export function getExpenseAnalysis(month: string): Promise<IExpenseData> {
 export function getAmoebaAnalysis(month: string): Promise<IAmoebaData> {
   return http.get<IAmoebaData>('/api/analysis/amoeba', {
     ...monthToDateRange(month),
+  })
+}
+
+/**
+ * 获取资金分析聚合数据（PRD v2.1 §8）
+ * 含现金收入/支出/净现金流/应收款 KPI、月度现金流趋势、应收账龄 Top 10
+ * @param startDate YYYY-MM-DD
+ * @param endDate YYYY-MM-DD
+ */
+export function getCashAnalysis(startDate: string, endDate: string): Promise<ICashData> {
+  return http.get<ICashData>('/api/analysis/cash', {
+    startDate,
+    endDate,
   })
 }
 

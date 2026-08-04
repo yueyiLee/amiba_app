@@ -1,166 +1,197 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { ref } from 'vue'
 import type { IProductData } from '@/api/types/analysis'
-import { formatAmount } from '@/utils/format'
 
-const props = defineProps<{
+/**
+ * 商品分析面板（PRD v2.1 §5）
+ * 结构：收入类/支出类双 Tab → 各自 KPI + 数量 TOP5 + 金额 TOP5 + 价格变动 TOP5 → 底部商品明细
+ */
+defineProps<{
   data: IProductData | null
   loading: boolean
 }>()
 
-const PLACEHOLDER = '--'
-
-function fmtMoney(v: number | undefined): string {
-  return `¥${formatAmount(v ?? 0)}`
-}
-
-function fmtPct(v: number | undefined): string {
-  return `${((v ?? 0) * 100).toFixed(1)}%`
-}
-
-function fmtNum(v: number | undefined): string {
-  return String(v ?? 0)
-}
-
-// ---- KPI 列表 ----
-const kpiList = computed(() => {
-  if (props.loading || props.data === null) {
-    return [
-      { key: 'sku', label: '在售商品', value: PLACEHOLDER, desc: 'SKU 数', tone: 'neutral' as const },
-      { key: 'inv', label: '库存占用', value: PLACEHOLDER, desc: '在库金额', tone: 'warn' as const },
-      { key: 'gm', label: '平均毛利率', value: PLACEHOLDER, desc: '本期加权', tone: 'up' as const },
-    ]
-  }
-  const k = props.data.kpi
-  return [
-    { key: 'sku', label: '在售商品', value: fmtNum(k.sku_count), desc: 'SKU 数', tone: 'neutral' as const },
-    { key: 'inv', label: '库存占用', value: fmtMoney(k.inventory_value), desc: '在库金额', tone: 'warn' as const },
-    { key: 'gm', label: '平均毛利率', value: fmtPct(k.avg_gm), desc: '本期加权', tone: 'up' as const },
-  ]
-})
-
-// ---- Top 商品 ----
-const topProducts = computed(() => props.data?.top_products ?? [])
-
-// ---- 库存预警 ----
-const alerts = computed(() => props.data?.alerts ?? [])
-
-/** 预警类型标签映射 */
-function alertTypeLabel(type: string): string {
-  const map: Record<string, string> = { low_margin: '低毛利', low_stock: '缺货', slow_turnover: '呆滞' }
-  return map[type] || type
-}
-
-/** 预警类型颜色 */
-function alertTypeColor(type: string): string {
-  const map: Record<string, string> = { low_margin: '#E5484D', low_stock: '#E5484D', slow_turnover: '#F59E0B' }
-  return map[type] || '#9AA1AC'
-}
-
-const alertSummary = computed(() => {
-  const c = props.data?.alert_count
-  if (!c || (c.red === 0 && c.yellow === 0)) return ''
-  return `${c.red} 红 · ${c.yellow} 黄`
-})
+type ProductTab = 'sales' | 'purchase'
+const activeTab = ref<ProductTab>('sales')
 </script>
 
 <template>
   <view class="flex flex-col gap-[24rpx]">
-    <!-- 3 张 KPI 卡片 -->
-    <view class="mx-[-8rpx] flex flex-wrap justify-between">
-      <view v-for="k in kpiList" :key="k.key" class="w-[45%] p-[8rpx]">
-        <KpiCard :label="k.label" :value="k.value" :desc="k.desc" :tone="k.tone" />
+    <!-- ====== 收入/支出分段控件（PRD §5.2 标注 1） ====== -->
+    <view class="rounded-[24rpx] bg-white border border-[#EEF1F6] px-[20rpx] py-[20rpx]">
+      <view class="flex items-baseline gap-[8rpx] px-[8rpx] pb-[16rpx] border-b border-[#F0F2F5]">
+        <text class="text-[29rpx] font-bold text-[#1F2329]">📦 商品分析</text>
+        <text class="text-[22rpx] text-[#9AA1AC]">待实现</text>
+      </view>
+
+      <!-- Tab 切换 -->
+      <view class="mt-[16rpx] mx-[8rpx] flex rounded-[18rpx] bg-[#F1F3F7] p-[4rpx]">
+        <view
+          class="flex-1 text-center py-[14rpx] rounded-[14rpx] text-[25rpx] font-semibold"
+          :class="activeTab === 'sales' ? 'bg-white text-[#1F2329] shadow-sm' : 'text-[#6B7280]'"
+          @click="activeTab = 'sales'"
+        >
+          📈 收入类（销售）
+        </view>
+        <view
+          class="flex-1 text-center py-[14rpx] rounded-[14rpx] text-[25rpx] font-semibold"
+          :class="activeTab === 'purchase' ? 'bg-white text-[#1F2329] shadow-sm' : 'text-[#6B7280]'"
+          @click="activeTab = 'purchase'"
+        >
+          📉 支出类（采购）
+        </view>
+      </view>
+
+      <!-- 收入类 KPI -->
+      <view v-if="activeTab === 'sales'" class="mt-[16rpx] flex gap-[12rpx] px-[8rpx]">
+        <view class="flex-1 rounded-[18rpx] bg-[#FBFCFE] border border-[#EEF1F6] px-[16rpx] py-[18rpx] text-center">
+          <text class="text-[21rpx] text-[#6B7280]">销售总数量</text>
+          <text class="mt-[8rpx] block text-[32rpx] font-bold text-[#1F2329]">--</text>
+        </view>
+        <view class="flex-1 rounded-[18rpx] bg-[#FBFCFE] border border-[#EEF1F6] px-[16rpx] py-[18rpx] text-center">
+          <text class="text-[21rpx] text-[#6B7280]">销售总金额</text>
+          <text class="mt-[8rpx] block text-[32rpx] font-bold text-[#E5484D]">--</text>
+        </view>
+        <view class="flex-1 rounded-[18rpx] bg-[#FBFCFE] border border-[#EEF1F6] px-[16rpx] py-[18rpx] text-center">
+          <text class="text-[21rpx] text-[#6B7280]">平均毛利率</text>
+          <text class="mt-[8rpx] block text-[32rpx] font-bold text-[#1F2329]">--</text>
+        </view>
+      </view>
+
+      <!-- 支出类 KPI -->
+      <view v-if="activeTab === 'purchase'" class="mt-[16rpx] flex gap-[12rpx] px-[8rpx]">
+        <view class="flex-1 rounded-[18rpx] bg-[#FBFCFE] border border-[#EEF1F6] px-[16rpx] py-[18rpx] text-center">
+          <text class="text-[21rpx] text-[#6B7280]">采购总数量</text>
+          <text class="mt-[8rpx] block text-[32rpx] font-bold text-[#1F2329]">--</text>
+        </view>
+        <view class="flex-1 rounded-[18rpx] bg-[#FBFCFE] border border-[#EEF1F6] px-[16rpx] py-[18rpx] text-center">
+          <text class="text-[21rpx] text-[#6B7280]">采购总成本</text>
+          <text class="mt-[8rpx] block text-[32rpx] font-bold text-[#16A34A]">--</text>
+        </view>
       </view>
     </view>
 
-    <!-- Top 商品销售 -->
-    <PanelCard title="Top 商品销售">
-      <view v-if="topProducts.length" class="mt-[8rpx]">
-        <view
-          v-for="(p, i) in topProducts"
-          :key="p.product_id"
-          class="flex items-center justify-between border-b border-[#F2F3F5] px-[4rpx] py-[20rpx]"
-          :class="{ 'border-b-0': i === topProducts.length - 1 }"
-        >
-          <view class="flex flex-1 flex-col gap-[6rpx] overflow-hidden">
-            <view class="flex items-center gap-[10rpx]">
-              <text
-                class="flex h-[36rpx] w-[36rpx] items-center justify-center rounded-full text-[20rpx] font-bold text-white"
-                :style="{ backgroundColor: i < 3 ? '#E5484D' : '#9AA1AC' }"
-              >
-                {{ i + 1 }}
-              </text>
-              <text class="truncate text-[28rpx] font-medium text-[#1F2329]">
-                {{ p.product_name }}
-              </text>
-            </view>
-            <view class="ml-[46rpx] flex gap-[20rpx] text-[22rpx] text-[#6B7280]">
-              <text>毛利率 {{ fmtPct(p.gm) }}</text>
-              <text>库存 {{ p.stock }}</text>
-              <text
-                :style="{ color: p.turnover_days > 90 ? '#E5484D' : p.turnover_days > 60 ? '#F59E0B' : '#16A34A' }"
-              >
-                周转 {{ p.turnover_days }}天
-              </text>
-            </view>
-          </view>
-          <view class="flex flex-col items-end gap-[4rpx]">
-            <text class="text-[28rpx] font-bold text-[#E5484D]">
-              {{ fmtMoney(p.sale) }}
-            </text>
-            <text class="text-[22rpx] text-[#9AA1AC]">
-              销售额
-            </text>
-          </view>
+    <!-- ====== 销售数量 TOP5（PRD §5.2 标注 3） ====== -->
+    <view v-if="activeTab === 'sales'" class="rounded-[24rpx] bg-white border border-[#EEF1F6] px-[20rpx] py-[20rpx]">
+      <view class="flex items-baseline gap-[8rpx] px-[8rpx] pb-[16rpx] border-b border-[#F0F2F5]">
+        <text class="text-[29rpx] font-bold text-[#1F2329]">🔢 销售数量 TOP5</text>
+      </view>
+      <view class="mt-[16rpx] flex flex-col gap-[14rpx] px-[8rpx]">
+        <view v-for="i in 3" :key="i" class="flex items-center gap-[12rpx]">
+          <text class="w-[130rpx] text-[23rpx] text-[#374151] truncate shrink-0">商品 {{ i }}</text>
+          <view class="flex-1 h-[18rpx] rounded-[6rpx] bg-[#F1F3F7]" />
+          <text class="w-[140rpx] text-right text-[23rpx] font-bold text-[#1F2329] shrink-0">-- 件</text>
         </view>
       </view>
-      <view v-else class="flex flex-col items-center justify-center py-[60rpx]">
-        <text class="i-carbon-package text-[52rpx] text-[#D8DDE4]" />
-        <text class="mt-[14rpx] text-[26rpx] text-[#9AA1AC]">
-          {{ loading ? '加载中…' : '暂无数据' }}
-        </text>
-      </view>
-    </PanelCard>
+    </view>
 
-    <!-- 库存预警 -->
-    <PanelCard title="库存预警" :action="alertSummary">
-      <view v-if="alerts.length" class="mt-[8rpx]">
-        <view
-          v-for="(a, i) in alerts"
-          :key="`${a.product_id}-${a.type}`"
-          class="flex items-center justify-between border-b border-[#F2F3F5] px-[4rpx] py-[18rpx]"
-          :class="{ 'border-b-0': i === alerts.length - 1 }"
-        >
-          <view class="flex flex-1 items-center gap-[12rpx] overflow-hidden">
-            <view
-              class="shrink-0 rounded-[8rpx] px-[12rpx] py-[4rpx] text-[20rpx] font-medium text-white"
-              :style="{ backgroundColor: alertTypeColor(a.type) }"
-            >
-              {{ alertTypeLabel(a.type) }}
-            </view>
-            <view class="flex flex-1 flex-col gap-[4rpx] overflow-hidden">
-              <text class="truncate text-[26rpx] text-[#1F2329]">
-                {{ a.product_name }}
-              </text>
-              <text class="truncate text-[22rpx] text-[#9AA1AC]">
-                {{ a.reason }}
-              </text>
-            </view>
-          </view>
-          <text
-            class="shrink-0 text-[24rpx]"
-            :style="{ color: a.level === 'red' ? '#E5484D' : '#F59E0B' }"
-          >
-            {{ a.level === 'red' ? '⚠ 高' : '● 关注' }}
-          </text>
+    <!-- ====== 销售金额 TOP5 ====== -->
+    <view v-if="activeTab === 'sales'" class="rounded-[24rpx] bg-white border border-[#EEF1F6] px-[20rpx] py-[20rpx]">
+      <view class="flex items-baseline gap-[8rpx] px-[8rpx] pb-[16rpx] border-b border-[#F0F2F5]">
+        <text class="text-[29rpx] font-bold text-[#1F2329]">💰 销售金额 TOP5</text>
+      </view>
+      <view class="mt-[16rpx] flex flex-col gap-[14rpx] px-[8rpx]">
+        <view v-for="i in 3" :key="i" class="flex items-center gap-[12rpx]">
+          <text class="w-[130rpx] text-[23rpx] text-[#374151] truncate shrink-0">商品 {{ i }}</text>
+          <view class="flex-1 h-[18rpx] rounded-[6rpx] bg-[#F1F3F7]" />
+          <text class="w-[140rpx] text-right text-[23rpx] font-bold text-[#E5484D] shrink-0">--</text>
         </view>
       </view>
-      <view v-else class="flex flex-col items-center justify-center py-[60rpx]">
-        <text class="i-carbon-checkmark-outline text-[52rpx] text-[#D8DDE4]" />
-        <text class="mt-[14rpx] text-[26rpx] text-[#9AA1AC]">
-          {{ loading ? '加载中…' : '暂无预警' }}
-        </text>
+    </view>
+
+    <!-- ====== 实际销售价变动 TOP5（PRD §5.2 标注 4） ====== -->
+    <view v-if="activeTab === 'sales'" class="rounded-[24rpx] bg-white border border-[#EEF1F6] px-[20rpx] py-[20rpx]">
+      <view class="flex items-baseline gap-[8rpx] px-[8rpx] pb-[16rpx] border-b border-[#F0F2F5]">
+        <text class="text-[29rpx] font-bold text-[#1F2329]">📐 实际销售价变动 TOP5</text>
       </view>
-    </PanelCard>
+      <view class="mt-[16rpx] flex flex-col gap-[12rpx] px-[8rpx]">
+        <view v-for="i in 2" :key="i" class="rounded-[18rpx] bg-[#FBFCFE] border border-[#EEF1F6] px-[20rpx] py-[16rpx]">
+          <view class="flex items-center justify-between">
+            <text class="text-[25rpx] font-bold text-[#1F2329]">商品名称 {{ i }}</text>
+            <view class="rounded-[12rpx] bg-[#F1F3F7] px-[12rpx] py-[2rpx] text-[20rpx] text-[#6B7280] font-semibold">变动%</view>
+          </view>
+          <text class="mt-[6rpx] block text-[21rpx] text-[#9AA1AC]">¥-- → ¥-- · 样本 -- 笔</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- ====== 采购数量 TOP5 ====== -->
+    <view v-if="activeTab === 'purchase'" class="rounded-[24rpx] bg-white border border-[#EEF1F6] px-[20rpx] py-[20rpx]">
+      <view class="flex items-baseline gap-[8rpx] px-[8rpx] pb-[16rpx] border-b border-[#F0F2F5]">
+        <text class="text-[29rpx] font-bold text-[#1F2329]">🔢 采购数量 TOP5</text>
+      </view>
+      <view class="mt-[16rpx] flex flex-col gap-[14rpx] px-[8rpx]">
+        <view v-for="i in 3" :key="i" class="flex items-center gap-[12rpx]">
+          <text class="w-[130rpx] text-[23rpx] text-[#374151] truncate shrink-0">商品 {{ i }}</text>
+          <view class="flex-1 h-[18rpx] rounded-[6rpx] bg-[#F1F3F7]" />
+          <text class="w-[140rpx] text-right text-[23rpx] font-bold text-[#1F2329] shrink-0">-- 件</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- ====== 采购成本 TOP5 ====== -->
+    <view v-if="activeTab === 'purchase'" class="rounded-[24rpx] bg-white border border-[#EEF1F6] px-[20rpx] py-[20rpx]">
+      <view class="flex items-baseline gap-[8rpx] px-[8rpx] pb-[16rpx] border-b border-[#F0F2F5]">
+        <text class="text-[29rpx] font-bold text-[#1F2329]">💰 采购成本 TOP5</text>
+      </view>
+      <view class="mt-[16rpx] flex flex-col gap-[14rpx] px-[8rpx]">
+        <view v-for="i in 3" :key="i" class="flex items-center gap-[12rpx]">
+          <text class="w-[130rpx] text-[23rpx] text-[#374151] truncate shrink-0">商品 {{ i }}</text>
+          <view class="flex-1 h-[18rpx] rounded-[6rpx] bg-[#F1F3F7]" />
+          <text class="w-[140rpx] text-right text-[23rpx] font-bold text-[#16A34A] shrink-0">--</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- ====== 实际采购价变动 TOP5 ====== -->
+    <view v-if="activeTab === 'purchase'" class="rounded-[24rpx] bg-white border border-[#EEF1F6] px-[20rpx] py-[20rpx]">
+      <view class="flex items-baseline gap-[8rpx] px-[8rpx] pb-[16rpx] border-b border-[#F0F2F5]">
+        <text class="text-[29rpx] font-bold text-[#1F2329]">📐 实际采购价变动 TOP5</text>
+      </view>
+      <view class="mt-[16rpx] flex flex-col gap-[12rpx] px-[8rpx]">
+        <view v-for="i in 2" :key="i" class="rounded-[18rpx] bg-[#FBFCFE] border border-[#EEF1F6] px-[20rpx] py-[16rpx]">
+          <view class="flex items-center justify-between">
+            <text class="text-[25rpx] font-bold text-[#1F2329]">商品名称 {{ i }}</text>
+            <view class="rounded-[12rpx] bg-[#F1F3F7] px-[12rpx] py-[2rpx] text-[20rpx] text-[#6B7280] font-semibold">变动%</view>
+          </view>
+          <text class="mt-[6rpx] block text-[21rpx] text-[#9AA1AC]">¥-- → ¥-- · 样本 -- 笔</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- ====== 商品明细卡片列表（PRD §5.2 标注 5，跨 Tab 固定） ====== -->
+    <view class="rounded-[24rpx] bg-white border border-[#EEF1F6] px-[20rpx] py-[20rpx]">
+      <view class="flex items-baseline gap-[8rpx] px-[8rpx] pb-[16rpx] border-b border-[#F0F2F5]">
+        <text class="text-[29rpx] font-bold text-[#1F2329]">📋 商品明细</text>
+        <text class="text-[22rpx] text-[#9AA1AC]">销售 + 采购合并</text>
+      </view>
+
+      <view class="mt-[16rpx] flex flex-col gap-[12rpx] px-[8rpx]">
+        <view v-for="i in 3" :key="i" class="rounded-[18rpx] bg-[#FBFCFE] border border-[#EEF1F6] px-[20rpx] py-[18rpx]">
+          <view class="flex items-center justify-between">
+            <text class="text-[25rpx] font-bold text-[#1F2329]">商品名称 {{ i }}</text>
+            <view class="rounded-[12rpx] bg-[#ECFDF5] px-[12rpx] py-[2rpx] text-[20rpx] text-[#16A34A] font-semibold">毛利率 --</view>
+          </view>
+          <view class="mt-[12rpx] grid grid-cols-2 gap-[10rpx]">
+            <view class="rounded-[12rpx] bg-[#F8FAFC] px-[14rpx] py-[12rpx]">
+              <text class="text-[20rpx] text-[#9AA1AC]">销售总额</text>
+              <text class="mt-[4rpx] block text-[26rpx] font-bold text-[#E5484D]">--</text>
+            </view>
+            <view class="rounded-[12rpx] bg-[#F8FAFC] px-[14rpx] py-[12rpx]">
+              <text class="text-[20rpx] text-[#9AA1AC]">采购总成本</text>
+              <text class="mt-[4rpx] block text-[26rpx] font-bold text-[#16A34A]">--</text>
+            </view>
+            <view class="rounded-[12rpx] bg-[#F8FAFC] px-[14rpx] py-[12rpx]">
+              <text class="text-[20rpx] text-[#9AA1AC]">销售数量</text>
+              <text class="mt-[4rpx] block text-[26rpx] font-bold text-[#1F2329]">--</text>
+            </view>
+            <view class="rounded-[12rpx] bg-[#F8FAFC] px-[14rpx] py-[12rpx]">
+              <text class="text-[20rpx] text-[#9AA1AC]">采购数量</text>
+              <text class="mt-[4rpx] block text-[26rpx] font-bold text-[#1F2329]">--</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 </template>

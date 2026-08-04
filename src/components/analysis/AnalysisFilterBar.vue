@@ -1,37 +1,24 @@
 <script lang="ts" setup>
 defineProps<{
-  /** 月份显示文本，如「2026年8月」 */
-  monthText: string
-  /** 单元显示文本，本期恒为「全部单元」 */
-  unitText: string
+  /** 时间范围显示文本，如「本月」「2026年1月 ~ 2026年7月」 */
+  timeLabel: string
 }>()
 
-/** 事件声明使用 camelCase，模板中使用 kebab-case（Vue 3 自动转换） */
-const emit = defineEmits<{ openMonth: [], openUnit: [] }>()
+const emit = defineEmits<{ openTimeRange: [] }>()
 </script>
 
 <template>
-  <!-- 6 个分析子页共享的筛选条：时间范围（月） + 单元筛选 -->
-  <view class="flex gap-[20rpx]">
-    <view
-      class="h-[76rpx] flex flex-1 items-center justify-between border border-[#E5E7EB] rounded-[20rpx] bg-white px-[24rpx]"
-      hover-class="opacity-60"
-      @click="emit('openMonth')"
-    >
-      <text class="text-[28rpx] text-[#1F2329]">
-        {{ monthText }}
-      </text>
-      <text class="i-carbon-chevron-down text-[26rpx] text-[#9AA1AC]" />
-    </view>
-    <view
-      class="h-[76rpx] flex flex-1 items-center justify-between border border-[#E5E7EB] rounded-[20rpx] bg-white px-[24rpx]"
-      hover-class="opacity-60"
-      @click="emit('openUnit')"
-    >
-      <text class="text-[28rpx] text-[#1F2329]">
-        {{ unitText }}
-      </text>
-      <text class="i-carbon-chevron-down text-[26rpx] text-[#9AA1AC]" />
-    </view>
+  <!-- 6 个分析子页共享的时间筛选条：单一胶囊（PRD v2.1 §2.2） -->
+  <view
+    class="flex items-center gap-[8rpx] rounded-[24rpx] bg-white border border-[#E5E7EB] px-[24rpx] py-[20rpx]"
+    hover-class="opacity-60"
+    @click="emit('openTimeRange')"
+  >
+    <text class="text-[26rpx] text-[#1F2329]">
+      📅 时间范围：{{ timeLabel }}
+    </text>
+    <text class="text-[22rpx] text-[#9AA1AC] ml-auto">
+      ▾
+    </text>
   </view>
 </template>

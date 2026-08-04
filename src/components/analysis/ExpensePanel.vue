@@ -1,209 +1,139 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
 import type { IExpenseData } from '@/api/types/analysis'
-import { formatAmount } from '@/utils/format'
 
 /**
- * 费用分析（PRD 5.4.5）
- * 视觉统一使用绿色语义（支出/反向），不得使用红/橙。
+ * 费用分析面板（PRD v2.1 §7）
+ * 结构：5 张 KPI（总费用独占一行 + 4 项 2×2）→ 月度费用趋势（堆叠条）→ 费用结构环形图
  */
-const props = defineProps<{
+defineProps<{
   data: IExpenseData | null
   loading: boolean
 }>()
-
-type ExpenseTab = 'compose' | 'trend' | 'unit'
-
-const TABS: { key: ExpenseTab, label: string }[] = [
-  { key: 'compose', label: '费用构成' },
-  { key: 'trend', label: '费用趋势' },
-  { key: 'unit', label: '单元费用' },
-]
-
-const activeTab = ref<ExpenseTab>('compose')
-
-const tabTitle = computed(() => TABS.find(t => t.key === activeTab.value)?.label ?? '')
-
-const PLACEHOLDER = '--'
-
-function fmtMoney(v: number | undefined): string {
-  return `¥${formatAmount(v ?? 0)}`
-}
-
-// ---- 费用构成 ----
-const composeList = computed(() => props.data?.compose ?? [])
-const totalExpense = computed(() => props.data?.total_expense ?? 0)
-
-const composeBars = computed(() => {
-  if (totalExpense.value <= 0) return []
-  return composeList.value.map(item => ({
-    name: item.name,
-    amount: item.amount,
-    pct: Math.round((item.amount / totalExpense.value) * 100),
-  }))
-})
-
-// 纯绿系渐变色
-const GREEN_COLORS = ['#16A34A', '#22C55E', '#4ADE80', '#86EFAC', '#BBF7D0']
-
-// ---- 费用趋势 ----
-const trendList = computed(() => props.data?.trend ?? [])
-const trendMax = computed(() => {
-  const vals = trendList.value.map(t => t.amount)
-  return vals.length > 0 ? Math.max(...vals) : 1
-})
-
-function trendMonthLabel(m: string): string {
-  // "2026-08" → "8月"
-  const parts = m.split('-')
-  const month = parseInt(parts[1], 10)
-  if (parts.length < 2 || Number.isNaN(month)) return m || '--'
-  return `${month}月`
-}
-
-// ---- 单元费用 ----
-const unitList = computed(() => props.data?.units ?? [])
-const unitTotal = computed(() => props.data?.unit_total ?? 0)
 </script>
 
 <template>
   <view class="flex flex-col gap-[24rpx]">
-    <!-- 三段二级标签 -->
-    <view class="flex rounded-[20rpx] bg-[#EEF1F6] p-[6rpx]">
-      <view
-        v-for="t in TABS"
-        :key="t.key"
-        class="flex-1 p-[3rpx]"
-        hover-class="opacity-60"
-        @click="activeTab = t.key"
-      >
-        <view
-          class="h-[60rpx] flex items-center justify-center rounded-[16rpx] text-[25rpx] font-semibold"
-          :class="
-            activeTab === t.key
-              ? 'bg-white text-[#16A34A] shadow-[0_2rpx_8rpx_rgba(22,163,74,0.12)]'
-              : 'text-[#6B7280]'
-          "
-        >
-          {{ t.label }}
+    <!-- ====== 5 张 KPI（PRD §7.2 标注 1） ====== -->
+    <view class="rounded-[24rpx] bg-white border border-[#EEF1F6] px-[20rpx] py-[20rpx]">
+      <view class="flex items-baseline gap-[8rpx] px-[8rpx] pb-[16rpx] border-b border-[#F0F2F5]">
+        <text class="text-[29rpx] font-bold text-[#1F2329]">💸 费用分析</text>
+        <text class="text-[22rpx] text-[#9AA1AC]">待实现</text>
+      </view>
+
+      <!-- 总费用：独占一行，浅绿底 -->
+      <view class="mt-[16rpx] mx-[8rpx] rounded-[18rpx] px-[24rpx] py-[22rpx]" style="background: #F6FBF8; border: 1px solid #D7EFE1">
+        <text class="text-[23rpx] text-[#6B7280]">总费用</text>
+        <text class="mt-[10rpx] block text-[36rpx] font-bold text-[#16A34A]">--</text>
+        <text class="mt-[4rpx] text-[21rpx] text-[#9AA1AC]">材料 + 委托 + 杂费 + 税金</text>
+      </view>
+
+      <!-- 4 项分类：2×2 -->
+      <view class="mt-[12rpx] flex flex-col gap-[12rpx]">
+        <!-- 第 1 行：材料采购 | 委托加工 -->
+        <view class="flex gap-[12rpx]">
+          <view class="flex-1 rounded-[18rpx] bg-[#FBFCFE] border border-[#EEF1F6] px-[20rpx] py-[22rpx]">
+            <view class="flex items-center gap-[8rpx]">
+              <view class="w-[16rpx] h-[16rpx] rounded-full shrink-0" style="background: #3b82f6" />
+              <text class="text-[23rpx] text-[#6B7280]">材料采购</text>
+            </view>
+            <text class="mt-[10rpx] block text-[36rpx] font-bold text-[#16A34A]">--</text>
+            <text class="mt-[4rpx] text-[21rpx] text-[#9AA1AC]">占比 --%</text>
+          </view>
+          <view class="flex-1 rounded-[18rpx] bg-[#FBFCFE] border border-[#EEF1F6] px-[20rpx] py-[22rpx]">
+            <view class="flex items-center gap-[8rpx]">
+              <view class="w-[16rpx] h-[16rpx] rounded-full shrink-0" style="background: #f59e0b" />
+              <text class="text-[23rpx] text-[#6B7280]">委托加工</text>
+            </view>
+            <text class="mt-[10rpx] block text-[36rpx] font-bold text-[#16A34A]">--</text>
+            <text class="mt-[4rpx] text-[21rpx] text-[#9AA1AC]">占比 --%</text>
+          </view>
+        </view>
+        <!-- 第 2 行：杂费支出 | 缴纳税金 -->
+        <view class="flex gap-[12rpx]">
+          <view class="flex-1 rounded-[18rpx] bg-[#FBFCFE] border border-[#EEF1F6] px-[20rpx] py-[22rpx]">
+            <view class="flex items-center gap-[8rpx]">
+              <view class="w-[16rpx] h-[16rpx] rounded-full shrink-0" style="background: #8b5cf6" />
+              <text class="text-[23rpx] text-[#6B7280]">杂费支出</text>
+            </view>
+            <text class="mt-[10rpx] block text-[36rpx] font-bold text-[#16A34A]">--</text>
+            <text class="mt-[4rpx] text-[21rpx] text-[#9AA1AC]">占比 --%</text>
+          </view>
+          <view class="flex-1 rounded-[18rpx] bg-[#FBFCFE] border border-[#EEF1F6] px-[20rpx] py-[22rpx]">
+            <view class="flex items-center gap-[8rpx]">
+              <view class="w-[16rpx] h-[16rpx] rounded-full shrink-0" style="background: #ef4444" />
+              <text class="text-[23rpx] text-[#6B7280]">缴纳税金</text>
+            </view>
+            <text class="mt-[10rpx] block text-[36rpx] font-bold text-[#16A34A]">--</text>
+            <text class="mt-[4rpx] text-[21rpx] text-[#9AA1AC]">占比 --%</text>
+          </view>
         </view>
       </view>
     </view>
 
-    <!-- ====== 费用构成 ====== -->
-    <PanelCard v-if="activeTab === 'compose'" title="费用构成">
-      <view v-if="composeBars.length" class="mt-[8rpx]">
-        <view
-          v-for="(bar, i) in composeBars"
-          :key="bar.name"
-          class="mb-[24rpx]"
-          :class="{ 'mb-0': i === composeBars.length - 1 }"
-        >
-          <view class="flex items-center justify-between text-[24rpx] text-[#6B7280]">
-            <text>{{ bar.name }}</text>
-            <text>{{ fmtMoney(bar.amount) }} ({{ bar.pct }}%)</text>
-          </view>
-          <view class="mt-[10rpx] h-[14rpx] w-full overflow-hidden rounded-full bg-[#F2F3F5]">
-            <view
-              class="h-full rounded-full transition-all duration-300"
-              :style="{ width: bar.pct + '%', backgroundColor: GREEN_COLORS[i % GREEN_COLORS.length] }"
-            />
-          </view>
-        </view>
-        <text class="mt-[12rpx] block text-[22rpx] text-[#9AA1AC]">
-          本期总支出 {{ fmtMoney(totalExpense) }}
-        </text>
+    <!-- ====== 月度费用趋势：堆叠条（PRD §7.2 标注 2） ====== -->
+    <view class="rounded-[24rpx] bg-white border border-[#EEF1F6] px-[20rpx] py-[20rpx]">
+      <view class="flex items-baseline gap-[8rpx] px-[8rpx] pb-[16rpx] border-b border-[#F0F2F5]">
+        <text class="text-[29rpx] font-bold text-[#1F2329]">📊 月度费用趋势</text>
+        <text class="text-[22rpx] text-[#9AA1AC]">堆叠</text>
       </view>
-      <view v-else class="flex flex-col items-center justify-center py-[60rpx]">
-        <text class="i-carbon-chart-bar-overlay text-[52rpx] text-[#D8DDE4]" />
-        <text class="mt-[14rpx] text-[26rpx] text-[#9AA1AC]">
-          {{ loading ? '加载中…' : '暂无费用数据' }}
-        </text>
-      </view>
-    </PanelCard>
 
-    <!-- ====== 费用趋势 ====== -->
-    <PanelCard v-if="activeTab === 'trend'" title="费用趋势（近 6 个月）">
-      <view v-if="trendList.length" class="mt-[8rpx]">
-        <!-- 简易柱状图 -->
-        <view class="flex items-end justify-around" style="height: 280rpx">
-          <view
-            v-for="(t, i) in trendList"
-            :key="t.month"
-            class="flex flex-col items-center gap-[10rpx]"
-          >
-            <text class="text-[20rpx] text-[#6B7280]">
-              {{ fmtMoney(t.amount) }}
-            </text>
-            <view
-              class="w-[48rpx] rounded-t-[6rpx] transition-all duration-300"
-              :style="{
-                height: Math.max(8, (t.amount / trendMax) * 180) + 'rpx',
-                backgroundColor: GREEN_COLORS[i % GREEN_COLORS.length],
-              }"
-            />
-            <text class="text-[22rpx] text-[#9AA1AC]">
-              {{ trendMonthLabel(t.month) }}
-            </text>
-          </view>
+      <!-- 图例 -->
+      <view class="mt-[16rpx] flex gap-[24rpx] px-[8rpx]">
+        <view class="flex items-center gap-[8rpx]">
+          <view class="w-[16rpx] h-[16rpx] rounded-full" style="background: #3b82f6" />
+          <text class="text-[21rpx] text-[#6B7280]">材料</text>
         </view>
-        <!-- 环比变化 -->
-        <view class="mt-[24rpx] rounded-[12rpx] bg-[#F0FDF4] px-[20rpx] py-[16rpx]">
-          <text class="text-[22rpx] text-[#16A34A]">
-            {{ trendList.length >= 2
-              ? `较上月 ${fmtMoney(trendList[trendList.length - 1].amount - trendList[trendList.length - 2].amount)}`
-              : '暂无环比数据'
-            }}
-          </text>
+        <view class="flex items-center gap-[8rpx]">
+          <view class="w-[16rpx] h-[16rpx] rounded-full" style="background: #f59e0b" />
+          <text class="text-[21rpx] text-[#6B7280]">委托</text>
+        </view>
+        <view class="flex items-center gap-[8rpx]">
+          <view class="w-[16rpx] h-[16rpx] rounded-full" style="background: #8b5cf6" />
+          <text class="text-[21rpx] text-[#6B7280]">杂费</text>
+        </view>
+        <view class="flex items-center gap-[8rpx]">
+          <view class="w-[16rpx] h-[16rpx] rounded-full" style="background: #ef4444" />
+          <text class="text-[21rpx] text-[#6B7280]">税金</text>
         </view>
       </view>
-      <view v-else class="flex flex-col items-center justify-center py-[60rpx]">
-        <text class="i-carbon-chart-line-data text-[52rpx] text-[#D8DDE4]" />
-        <text class="mt-[14rpx] text-[26rpx] text-[#9AA1AC]">
-          {{ loading ? '加载中…' : '暂无趋势数据' }}
-        </text>
-      </view>
-    </PanelCard>
 
-    <!-- ====== 单元费用 ====== -->
-    <PanelCard v-if="activeTab === 'unit'" title="单元费用">
-      <view v-if="unitList.length" class="mt-[8rpx]">
-        <view
-          v-for="(u, i) in unitList"
-          :key="u.unit"
-          class="flex items-center justify-between border-b border-[#F2F3F5] px-[4rpx] py-[20rpx]"
-          :class="{ 'border-b-0': i === unitList.length - 1 }"
-        >
-          <view class="flex flex-1 items-center gap-[12rpx]">
-            <text
-              class="flex h-[36rpx] w-[36rpx] items-center justify-center rounded-full text-[20rpx] font-bold text-white"
-              :style="{ backgroundColor: GREEN_COLORS[i % GREEN_COLORS.length] }"
-            >
-              {{ i + 1 }}
-            </text>
-            <text class="text-[28rpx] font-medium text-[#1F2329]">
-              {{ u.unit }}
-            </text>
-          </view>
-          <view class="flex items-center gap-[16rpx]">
-            <text class="text-[22rpx] text-[#9AA1AC]">
-              {{ unitTotal > 0 ? Math.round((u.amount / unitTotal) * 100) : 0 }}%
-            </text>
-            <text class="text-[28rpx] font-bold text-[#16A34A]">
-              {{ fmtMoney(u.amount) }}
-            </text>
-          </view>
+      <!-- 堆叠条占位 -->
+      <view class="mt-[16rpx] flex flex-col gap-[14rpx] px-[8rpx]">
+        <view v-for="m in ['2026-05', '2026-06', '2026-07']" :key="m" class="flex items-center gap-[12rpx]">
+          <text class="w-[100rpx] text-[21rpx] text-[#9AA1AC] shrink-0">{{ m }}</text>
+          <view class="flex-1 h-[24rpx] rounded-[8rpx] bg-[#F1F3F7]" />
+          <text class="w-[140rpx] text-right text-[22rpx] font-bold text-[#16A34A] shrink-0">--</text>
         </view>
-        <text class="mt-[12rpx] block text-[22rpx] text-[#9AA1AC]">
-          单元费用合计 {{ fmtMoney(unitTotal) }}
-        </text>
       </view>
-      <view v-else class="flex flex-col items-center justify-center py-[60rpx]">
-        <text class="i-carbon-chart-bar-overlay text-[52rpx] text-[#D8DDE4]" />
-        <text class="mt-[14rpx] text-[26rpx] text-[#9AA1AC]">
-          {{ loading ? '加载中…' : '暂无单元数据' }}
-        </text>
+    </view>
+
+    <!-- ====== 费用结构环形图（PRD §7.2 标注 3） ====== -->
+    <view class="rounded-[24rpx] bg-white border border-[#EEF1F6] px-[20rpx] py-[20rpx]">
+      <view class="flex items-baseline gap-[8rpx] px-[8rpx] pb-[16rpx] border-b border-[#F0F2F5]">
+        <text class="text-[29rpx] font-bold text-[#1F2329]">🍩 费用结构</text>
       </view>
-    </PanelCard>
+
+      <!-- 环形图占位区 -->
+      <view class="mt-[24rpx] flex flex-col items-center justify-center py-[40rpx]">
+        <view class="w-[320rpx] h-[320rpx] rounded-full bg-[#F1F3F7] flex flex-col items-center justify-center">
+          <text class="text-[22rpx] text-[#6B7280]">总费用</text>
+          <text class="mt-[8rpx] text-[32rpx] font-bold text-[#16A34A]">--</text>
+        </view>
+      </view>
+
+      <!-- 图例 -->
+      <view class="mt-[16rpx] flex flex-wrap gap-x-[24rpx] gap-y-[12rpx] justify-center px-[8rpx]">
+        <view v-for="(item, idx) in [
+          { label: '材料采购', color: '#3b82f6' },
+          { label: '委托加工', color: '#f59e0b' },
+          { label: '杂费支出', color: '#8b5cf6' },
+          { label: '缴纳税金', color: '#ef4444' },
+        ]" :key="item.label" class="flex items-center gap-[8rpx]">
+          <view class="w-[16rpx] h-[16rpx] rounded-full shrink-0" :style="{ background: item.color }" />
+          <text class="text-[21rpx] text-[#6B7280]">{{ item.label }} --%</text>
+          <text class="text-[21rpx] text-[#374151] font-semibold">--</text>
+        </view>
+      </view>
+    </view>
   </view>
 </template>

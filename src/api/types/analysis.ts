@@ -4,22 +4,23 @@
  */
 
 /** 6 个分析子功能标识 */
-export type AnalysisSeg = 'overview' | 'customer' | 'product' | 'contract' | 'expense' | 'amoeba'
+export type AnalysisSeg = 'overview' | 'customer' | 'product' | 'contract' | 'expense' | 'cash'
 
 /** 6 宫格子功能入口配置 */
 export interface IAnalysisSegItem {
   key: AnalysisSeg
   label: string
+  icon: string
 }
 
-/** 分析页 6 宫格（两行三列，顺序与 PRD 5.4 一致） */
+/** 分析页 6 宫格（两行三列，顺序与 PRD v2.1 一致） */
 export const ANALYSIS_SEGS: IAnalysisSegItem[] = [
-  { key: 'overview', label: '驾驶舱' },
-  { key: 'customer', label: '客户分析' },
-  { key: 'product', label: '商品分析' },
-  { key: 'contract', label: '合同分析' },
-  { key: 'expense', label: '费用分析' },
-  { key: 'amoeba', label: '阿米巴核算' },
+  { key: 'overview', label: '经营总览', icon: '🧭' },
+  { key: 'customer', label: '客户分析', icon: '👥' },
+  { key: 'product', label: '商品分析', icon: '📦' },
+  { key: 'contract', label: '合同分析', icon: '📄' },
+  { key: 'expense', label: '费用分析', icon: '💸' },
+  { key: 'cash', label: '资金分析', icon: '💰' },
 ]
 
 /** KPI 语义色调：up=红（正向）/ down=绿（反向）/ warn=橙（风险）/ neutral=中性 */
@@ -339,6 +340,59 @@ export interface IAmoebaData {
   unit_contribs: IAmoebaUnitContrib[]
   /** 单元工时是否可用（恒为 false） */
   unit_hours_available: boolean
+}
+
+// ========== 资金分析（PRD v2.1 §8） ==========
+
+/** 资金分析 4 项 KPI */
+export interface ICashKpi {
+  /** 现金收入 */
+  cash_in: number
+  /** 现金支出（绝对值） */
+  cash_out: number
+  /** 净现金流 = 现金收入 − 现金支出 */
+  net_cash: number
+  /** 应收款 = 销售收入 − 现金收入 */
+  receivable: number
+}
+
+/** 月度现金流行数据点 */
+export interface ICashTrendPoint {
+  /** 月份 YYYY-MM */
+  month: string
+  /** 现金收入 */
+  in: number
+  /** 现金支出 */
+  out: number
+  /** 净额 */
+  net: number
+}
+
+/** 应收账龄条目 */
+export interface ICashAgingItem {
+  /** 客户 ID */
+  customer_id: number
+  /** 客户名称 */
+  name: string
+  /** 账龄天数 */
+  days: number
+  /** 应收金额 */
+  amount: number
+  /** 分档：超期 / 关注 / 正常 */
+  bucket: 'overdue' | 'watch' | 'normal'
+}
+
+/** 资金分析聚合数据（后端 /api/analysis/cash 返回） */
+export interface ICashData {
+  kpi: ICashKpi
+  /** 月度现金流行 */
+  trend: ICashTrendPoint[]
+  /** 应收账龄 Top 10 */
+  aging: ICashAgingItem[]
+  /** 是否展示挂账空态引导：现金收入=0 且现金支出=0 且应收款>0 时为 true */
+  show_receivable_guide: boolean
+  /** 挂账应收款金额（用于空态引导文案） */
+  pending_receivable: number
 }
 
 // ========== 看板 v2 新增类型 ==========
