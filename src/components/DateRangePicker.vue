@@ -48,6 +48,11 @@ function formatTriggerDate(date: string): string {
 
 // 显示文本
 const displayText = computed(() => {
+  // 优先显示当前选中的快捷选项
+  if (activeQuickOption.value) {
+    const opt = quickOptions.find((o) => o.key === activeQuickOption.value)
+    if (opt) return opt.label
+  }
   if (props.modelValue && props.modelValue.length === 2) {
     const start = formatTriggerDate(props.modelValue[0])
     const end = formatTriggerDate(props.modelValue[1])

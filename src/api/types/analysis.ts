@@ -340,3 +340,62 @@ export interface IAmoebaData {
   /** 单元工时是否可用（恒为 false） */
   unit_hours_available: boolean
 }
+
+// ========== 看板 v2 新增类型 ==========
+
+/** 按日收支趋势数据点 */
+export interface IDailyTrendItem {
+  date: string
+  income: number
+  expense: number
+}
+
+/** 收入构成项 */
+export interface IIncomeComposeItem {
+  name: string
+  amount: number
+}
+
+/** 支出构成项 */
+export interface IExpenseComposeItem {
+  name: string
+  amount: number
+}
+
+/** 每日趋势聚合数据（后端 /api/analysis/daily-trend 返回） */
+export interface IDailyTrendData {
+  trend: IDailyTrendItem[]
+  incomeCompose: IIncomeComposeItem[]
+  expenseCompose: IExpenseComposeItem[]
+}
+
+/** 库存明细项（看板精简版） */
+export interface IInventoryItem {
+  id: number
+  productName: string
+  category1: string
+  quantity: number
+  avgPrice: number
+  /** 单行价值 = quantity × avgPrice */
+  value: number
+}
+
+/** 库存列表返回 */
+export interface IInventoryListData {
+  items: IInventoryItem[]
+  totalSku: number
+  totalValue: number
+  zeroStockSku: number
+}
+
+/** 看板 v2 统一数据 */
+export interface IDashboardV2Data {
+  /** 驾驶舱 KPI */
+  cockpit: ICockpitData
+  /** 阿米巴核算 */
+  amoeba: IAmoebaData
+  /** 每日收支趋势 + 构成 */
+  dailyTrend: IDailyTrendData
+  /** 库存总览 */
+  inventory: IInventoryListData
+}
