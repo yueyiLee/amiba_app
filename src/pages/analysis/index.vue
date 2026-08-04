@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
 import dayjs from 'dayjs'
-import { getCockpit, getCustomerAnalysis, getProductAnalysis, getContractAnalysis, getExpenseAnalysis, getCashAnalysis } from '@/api/analysis'
-import type { AnalysisSeg, ICockpitData, ICustomerData, IProductData, IContractData, IExpenseData, ICashData } from '@/api/types/analysis'
+import { getOverview, getCustomerAnalysis, getProductAnalysis, getContractAnalysis, getExpenseAnalysis, getCashAnalysis } from '@/api/analysis'
+import type { AnalysisSeg, IOverviewData, ICustomerData, IProductData, IContractData, IExpenseData, ICashData } from '@/api/types/analysis'
 import DateRangePicker from '@/components/DateRangePicker.vue'
 
 definePage({
@@ -20,8 +20,6 @@ const dateRange = ref<[string, string] | null>([
   dayjs().startOf('month').format('YYYY-MM-DD'),
   dayjs().format('YYYY-MM-DD'),
 ])
-
-const currentMonth = computed(() => dayjs().format('YYYY-MM'))
 
 /** 时间范围解析：从 dateRange 推导 start / end / label */
 const timeRange = computed(() => {
@@ -47,9 +45,9 @@ const timeRange = computed(() => {
 })
 
 // ========== 各面板数据 / 加载 / 错误状态 ==========
-const cockpit = ref<ICockpitData | null>(null)
-const cockpitLoading = ref(false)
-const cockpitError = ref<string | null>(null)
+const overview = ref<IOverviewData | null>(null)
+const overviewLoading = ref(false)
+const overviewError = ref<string | null>(null)
 
 const customerData = ref<ICustomerData | null>(null)
 const customerLoading = ref(false)
@@ -79,23 +77,23 @@ const PANEL_CONFIG: Record<AnalysisSeg, {
   error: { value: string | null }
 }> = {
   overview: {
-    loader: (_start, _end) => getCockpit(currentMonth.value),
-    data: cockpit, loading: cockpitLoading, error: cockpitError,
+    loader: (start, end) => getOverview(start, end),
+    data: overview, loading: overviewLoading, error: overviewError,
   },
   customer: {
-    loader: (_start, _end) => getCustomerAnalysis(currentMonth.value),
+    loader: (start, end) => getCustomerAnalysis(start, end),
     data: customerData, loading: customerLoading, error: customerError,
   },
   product: {
-    loader: (_start, _end) => getProductAnalysis(currentMonth.value),
+    loader: (start, end) => getProductAnalysis(start, end),
     data: productData, loading: productLoading, error: productError,
   },
   contract: {
-    loader: (_start, _end) => getContractAnalysis(currentMonth.value),
+    loader: (start, end) => getContractAnalysis(start, end),
     data: contractData, loading: contractLoading, error: contractError,
   },
   expense: {
-    loader: (_start, _end) => getExpenseAnalysis(currentMonth.value),
+    loader: (start, end) => getExpenseAnalysis(start, end),
     data: expenseData, loading: expenseLoading, error: expenseError,
   },
   cash: {
@@ -149,8 +147,8 @@ function onDateConfirm({ start_date, end_date }: { start_date: string, end_date:
   loadForSeg(activeSeg.value)
 }
 
-// ========== 预警 / Top 榜跳转 ==========
-function onNavigate(seg?: AnalysisSeg) {
+// ========== 预警 / Top 榜跳转（支持 jumpKey 高亮） ==========
+function onNavigate(seg?: AnalysisSeg, _jumpKey?: string) {
   if (seg) activeSeg.value = seg
   loadForSeg(activeSeg.value)
 }
@@ -211,8 +209,8 @@ onShow(() => {
       <!-- 6 个子功能面板（v-if） -->
       <CockpitPanel
         v-if="activeSeg === 'overview'"
-        :data="cockpit"
-        :loading="cockpitLoading"
+        :data="overview"
+        :loading="overviewLoading"
         @navigate="onNavigate"
       />
       <CustomerPanel

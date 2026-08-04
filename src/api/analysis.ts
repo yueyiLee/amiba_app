@@ -1,58 +1,54 @@
 import { http } from '@/http/http'
 import { monthToDateRange } from './transaction'
-import type { ICockpitData, ICustomerData, IProductData, IContractData, IExpenseData, IAmoebaData, ICashData, IDailyTrendData, IInventoryListData, IDashboardV2Data } from './types/analysis'
+import type { ICockpitData, IOverviewData, ICustomerData, IProductData, IContractData, IExpenseData, IAmoebaData, ICashData, IDailyTrendData, IInventoryListData, IDashboardV2Data } from './types/analysis'
 
 /** 单元筛选默认值（后端约定：'全部单元' 表示不过滤） */
 export const ALL_UNITS = '全部单元'
 
 /**
- * 获取分析驾驶舱聚合数据（6 项 KPI + 预警清单 + Top 榜）
- * @param month 月份 YYYY-MM
+ * 获取经营总览聚合数据（PRD v2.1 §3 /api/analysis/overview）
+ * 返回 6 项 KPI + 预警清单 + Top 5 客户 + Top 5 商品
+ * @param startDate YYYY-MM-DD
+ * @param endDate YYYY-MM-DD
  */
-export function getCockpit(month: string): Promise<ICockpitData> {
-  return http.get<ICockpitData>('/api/analysis/cockpit', {
-    ...monthToDateRange(month),
-  })
+export function getOverview(startDate: string, endDate: string): Promise<IOverviewData> {
+  return http.get<IOverviewData>('/api/analysis/overview', { startDate, endDate })
 }
 
 /**
  * 获取客户分析聚合数据（PRD 5.4.2）
- * @param month 月份 YYYY-MM
+ * @param startDate YYYY-MM-DD
+ * @param endDate YYYY-MM-DD
  */
-export function getCustomerAnalysis(month: string): Promise<ICustomerData> {
-  return http.get<ICustomerData>('/api/analysis/customer', {
-    ...monthToDateRange(month),
-  })
+export function getCustomerAnalysis(startDate: string, endDate: string): Promise<ICustomerData> {
+  return http.get<ICustomerData>('/api/analysis/customer', { startDate, endDate })
 }
 
 /**
  * 获取商品分析聚合数据（PRD 5.4.3）
- * @param month 月份 YYYY-MM
+ * @param startDate YYYY-MM-DD
+ * @param endDate YYYY-MM-DD
  */
-export function getProductAnalysis(month: string): Promise<IProductData> {
-  return http.get<IProductData>('/api/analysis/product', {
-    ...monthToDateRange(month),
-  })
+export function getProductAnalysis(startDate: string, endDate: string): Promise<IProductData> {
+  return http.get<IProductData>('/api/analysis/product', { startDate, endDate })
 }
 
 /**
  * 获取合同分析聚合数据（PRD 5.4.4）
- * @param month 月份 YYYY-MM
+ * @param startDate YYYY-MM-DD
+ * @param endDate YYYY-MM-DD
  */
-export function getContractAnalysis(month: string): Promise<IContractData> {
-  return http.get<IContractData>('/api/analysis/contract', {
-    ...monthToDateRange(month),
-  })
+export function getContractAnalysis(startDate: string, endDate: string): Promise<IContractData> {
+  return http.get<IContractData>('/api/analysis/contract', { startDate, endDate })
 }
 
 /**
  * 获取费用分析聚合数据（PRD 5.4.5）
- * @param month 月份 YYYY-MM
+ * @param startDate YYYY-MM-DD
+ * @param endDate YYYY-MM-DD
  */
-export function getExpenseAnalysis(month: string): Promise<IExpenseData> {
-  return http.get<IExpenseData>('/api/analysis/expense', {
-    ...monthToDateRange(month),
-  })
+export function getExpenseAnalysis(startDate: string, endDate: string): Promise<IExpenseData> {
+  return http.get<IExpenseData>('/api/analysis/expense', { startDate, endDate })
 }
 
 /**

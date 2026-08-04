@@ -395,6 +395,78 @@ export interface ICashData {
   pending_receivable: number
 }
 
+// ========== 经营总览（PRD v2.1 §3） ==========
+
+/** 经营总览 6 项 KPI（PRD v2.1 §3.1） */
+export interface IOverviewKpi {
+  /** 本期销售收入 = Σ 交易类型「销售收入」 */
+  sales_income: number
+  /** 本期应收款 = 销售收入 − 现金收入 */
+  receivable: number
+  /** 本期附加价值 = 总收入 − 消费支出（材料+委托加工）− 杂费支出 */
+  added_value: number
+  /** 单位时间附加价值 = 附加价值 ÷ 总工时（¥/h） */
+  unit_added_value: number
+  /** 本期总支出 = 材料采购 + 委托加工 + 杂费支出 + 缴纳税金（不含员工工资） */
+  total_expense: number
+  /** 本期总利润 = 附加价值 − 总工资 − 缴纳税金 */
+  total_profit: number
+}
+
+/** 预警等级（PRD v2.1 §3.4 表 3.4.1） */
+export type AlertLevel = 'red' | 'yellow'
+
+/** 预警条目（PRD v2.1 §3.4 表 3.4.1） */
+export interface IOverviewAlert {
+  /** 预警等级 */
+  level: AlertLevel
+  /** 预警标题（例：客户大额应收） */
+  title: string
+  /** 预警描述（例：张×× — ¥ 85,000） */
+  sub: string
+  /** 点击跳转的目标面板 */
+  jump_to: AnalysisSeg
+  /** 跳转后高亮匹配的关键词 */
+  jump_key?: string
+}
+
+/** 客户 Top 5 条目（PRD v2.1 §3.5） */
+export interface IOverviewTopCustomer {
+  /** 客户 ID */
+  id: number
+  /** 客户名称 */
+  name: string
+  /** 本期销售额 */
+  sale: number
+  /** 本期应收 */
+  receivable: number
+  /** 最近一次交易日期 YYYY-MM-DD */
+  last_date: string
+  /** 客户状态标签 */
+  status: 'normal' | 'late' | 'risk'
+}
+
+/** 商品 Top 5 条目（PRD v2.1 §3.5） */
+export interface IOverviewTopProduct {
+  /** 商品名称 */
+  name: string
+  /** 本期销售额 */
+  sale: number
+}
+
+/** 经营总览聚合数据（/api/analysis/overview 返回，PRD v2.1 §3） */
+export interface IOverviewData {
+  kpi: IOverviewKpi
+  /** 预警清单 */
+  alerts: IOverviewAlert[]
+  /** 预警计数 */
+  alert_count: { red: number, yellow: number }
+  /** Top 5 客户 */
+  top_customers: IOverviewTopCustomer[]
+  /** Top 5 商品 */
+  top_products: IOverviewTopProduct[]
+}
+
 // ========== 看板 v2 新增类型 ==========
 
 /** 按日收支趋势数据点 */
