@@ -201,15 +201,18 @@ function onQuickSelect(key: string) {
   <view class="date-range-picker">
     <!-- 触发区域 -->
     <view
-      class="flex items-center justify-between px-[24rpx] py-[20rpx] bg-white rounded-[16rpx] border-1 border-[#E5E6EB]"
+      class="flex items-center justify-between pr-[24rpx] py-[20rpx] bg-white rounded-[16rpx] border-1 border-[#E5E6EB]"
       @tap="open"
     >
-      <text
-        class="text-[28rpx]"
-        :class="hasValue ? 'text-[#1F2329]' : 'text-[#C9CDD4]'"
-      >
-        {{ displayText }}
-      </text>
+    　<view class="flex flex-1 items-center text-[28rpx] ">
+        <text>日期范围: </text>
+        <text
+          class="text-[28rpx] rounded-[20rpx] px-[24rpx] py-[4rpx]"
+          :class="hasValue ? 'text-[#1F2329] bg-[#F0F5FF] border-1 border-[#D6E4FF]' : 'text-[#C9CDD4]'"
+        >
+          {{ displayText }}
+        </text>
+      </view>
       <text class="i-carbon-calendar text-[36rpx] text-[#9AA1AC]" />
     </view>
 

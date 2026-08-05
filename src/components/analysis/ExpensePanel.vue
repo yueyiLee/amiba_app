@@ -206,41 +206,26 @@ const ringDashSegments = computed(() => {
             <view v-for="row in trend" :key="row.month" class="flex items-center gap-[12rpx]">
               <text class="w-[100rpx] text-[21rpx] text-[#9AA1AC] shrink-0">{{ row.month }}</text>
               <view class="flex-1 h-[24rpx] rounded-[8rpx] bg-[#F1F3F7] overflow-hidden flex">
-                <!-- 材料段 -->
+                <!-- 使用 flex-grow 分配宽度，默认 flex-shrink:1 可在总宽超 100% 时自动压缩 -->
                 <view
                   v-if="row.material > 0"
-                  class="h-full shrink-0"
-                  :style="{
-                    width: Math.max((row.material / (row.total || 1)) * 100, 3) + '%',
-                    background: '#3b82f6',
-                  }"
+                  class="h-full"
+                  :style="{ flex: row.material, minWidth: '3%', background: '#3b82f6' }"
                 />
-                <!-- 委托段 -->
                 <view
                   v-if="row.process > 0"
-                  class="h-full shrink-0"
-                  :style="{
-                    width: Math.max((row.process / (row.total || 1)) * 100, 3) + '%',
-                    background: '#f59e0b',
-                  }"
+                  class="h-full"
+                  :style="{ flex: row.process, minWidth: '3%', background: '#f59e0b' }"
                 />
-                <!-- 杂费段 -->
                 <view
                   v-if="row.misc > 0"
-                  class="h-full shrink-0"
-                  :style="{
-                    width: Math.max((row.misc / (row.total || 1)) * 100, 3) + '%',
-                    background: '#8b5cf6',
-                  }"
+                  class="h-full"
+                  :style="{ flex: row.misc, minWidth: '3%', background: '#8b5cf6' }"
                 />
-                <!-- 税金段 -->
                 <view
                   v-if="row.tax > 0"
-                  class="h-full shrink-0"
-                  :style="{
-                    width: Math.max((row.tax / (row.total || 1)) * 100, 3) + '%',
-                    background: '#ef4444',
-                  }"
+                  class="h-full"
+                  :style="{ flex: row.tax, minWidth: '3%', background: '#ef4444' }"
                 />
               </view>
               <text class="w-[140rpx] text-right text-[22rpx] font-bold text-[#16A34A] shrink-0 tabular-nums">{{ fmtNum(row.total) }}</text>

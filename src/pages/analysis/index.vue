@@ -241,6 +241,8 @@ onShow(() => {
         v-if="activeSeg === 'cash'"
         :data="cashData"
         :loading="cashLoading"
+        :error="cashError"
+        @retry="loadPanel('cash', true)"
       />
     </view>
   </view>
