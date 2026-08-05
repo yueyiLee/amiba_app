@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/unibest-tech/unibest">
-    <img width="160" src="./src/static/logo.svg">
+    <img width="160" src="./src/static/logo.png">
   </a>
 </p>
 

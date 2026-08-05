@@ -1,7 +1,7 @@
 import type { ShareConfig } from './types'
 
 /** 默认分享缩略图（小程序本地路径；H5 端会自动补全 origin 为绝对 URL） */
-export const DEFAULT_SHARE_IMAGE = '/static/app/icons/192x192.png'
+export const DEFAULT_SHARE_IMAGE = '/static/logo.png'
 
 /** 默认兜底分享配置 */
 export const DEFAULT_SHARE: ShareConfig = {
