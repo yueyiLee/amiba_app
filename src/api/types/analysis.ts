@@ -257,46 +257,47 @@ export interface IProductData {
 }
 
 /**
- * 合同分析（PRD 5.4.4）
+ * 合同分析（PRD v2.1 §6）
  */
 
-/** 合同分析 4 项 KPI */
+/** 合同分析 3 项 KPI（PRD v2.1 §6.1） */
 export interface IContractKpi {
-  /** 合同总额（本期签约） */
+  /** 合同总金额 = Σ 各合同金额 */
   total_amount: number
-  /** 执行率 = 回款 / 合同金额（0-1 小数） */
-  execution_rate: number
-  /** 未回款金额 */
-  unpaid_amount: number
-  /** 按状态汇总 */
-  status_summary: {
-    in_progress: { count: number, amount: number }
-    completed: { count: number, amount: number }
-    dunning: { count: number, amount: number }
-  }
+  /** 已回款 = Σ 各合同对应客户的现金收入 */
+  total_paid: number
+  /** 未回款 = 合同总金额 − 已回款（下限 0） */
+  total_unpaid: number
 }
 
-/** 合同执行列表行 */
+/** 合同明细行（PRD v2.1 §6.1） */
 export interface IContractRow {
+  /** 合同 ID */
   id: number
-  customer_name: string
-  date: string
+  /** 合同展示名（优先 contractNo，缺失回退 #合同ID） */
+  name: string
+  /** 客户名称 */
+  customer: string
   /** 合同金额 */
   amount: number
-  /** 已回款 */
+  /** 已回款金额 */
   paid: number
-  /** 未回款 */
+  /** 未回款金额 */
   unpaid: number
-  /** 状态：进行中 / 已完结 / 催收中 */
+  /** 执行率 = 已回款 ÷ 合同金额（0-1 小数，上限 1.0） */
+  ratio: number
+  /** 状态徽章：回款滞后 / 执行中 / 健康（由执行率派生） */
   status: string
-  /** 账龄（天） */
-  age_days: number
+  /** 合同开始日期 YYYY-MM-DD */
+  start_date: string
+  /** 合同结束日期 YYYY-MM-DD */
+  end_date: string
 }
 
-/** 合同分析聚合数据（后端 /api/analysis/contract 返回） */
+/** 合同分析聚合数据（后端 /api/analysis/contract 返回，PRD v2.1 §13） */
 export interface IContractData {
   kpi: IContractKpi
-  contracts: IContractRow[]
+  rows: IContractRow[]
 }
 
 /**

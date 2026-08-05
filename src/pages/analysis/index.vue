@@ -227,6 +227,8 @@ onShow(() => {
         v-if="activeSeg === 'contract'"
         :data="contractData"
         :loading="contractLoading"
+        :error="contractError"
+        @retry="loadPanel('contract', true)"
       />
       <ExpensePanel
         v-if="activeSeg === 'expense'"
