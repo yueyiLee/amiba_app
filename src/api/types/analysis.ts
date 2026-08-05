@@ -301,45 +301,56 @@ export interface IContractData {
 }
 
 /**
- * 费用分析（PRD 5.4.5）
+ * 费用分析（PRD v2.1 §7）
  */
 
-/** 费用构成条目 */
+/** 费用分析 5 项 KPI（PRD v2.1 §7.1） */
+export interface IExpenseKpi {
+  /** 总费用 = 材料 + 委托 + 杂费 + 税金 */
+  total: number
+  /** 材料采购 */
+  material: number
+  /** 委托加工 */
+  process: number
+  /** 杂费支出 */
+  misc: number
+  /** 缴纳税金 */
+  tax: number
+}
+
+/** 费用构成条目（PRD v2.1 §7.1，用于环形图） */
 export interface IExpenseComposeItem {
-  /** 费用类别名称（如"材料采购"/"员工工资"/"杂费支出"） */
+  /** 费用类别名称 */
   name: string
   /** 金额 */
   amount: number
+  /** 分类色键：blue / orange / purple / red */
+  color_key: string
 }
 
-/** 费用趋势月度数据点 */
+/** 月度费用趋势数据点（PRD v2.1 §7.1，堆叠条） */
 export interface IExpenseTrendPoint {
   /** 月份 YYYY-MM */
   month: string
-  /** 该月支出总额 */
-  amount: number
+  /** 材料采购当月支出 */
+  material: number
+  /** 委托加工当月支出 */
+  process: number
+  /** 杂费支出当月支出 */
+  misc: number
+  /** 缴纳税金当月支出 */
+  tax: number
+  /** 当月合计 */
+  total: number
 }
 
-/** 单元费用条目 */
-export interface IExpenseUnitItem {
-  /** 单元名称 */
-  unit: string
-  /** 费用金额 */
-  amount: number
-}
-
-/** 费用分析聚合数据（后端 /api/analysis/expense 返回） */
+/** 费用分析聚合数据（后端 /api/analysis/expense 返回，PRD v2.1 §13） */
 export interface IExpenseData {
-  /** 费用构成列表 */
-  compose: IExpenseComposeItem[]
-  /** 总支出 */
-  total_expense: number
-  /** 近 6 个月费用趋势 */
+  kpi: IExpenseKpi
+  /** 月度费用趋势（堆叠条数据） */
   trend: IExpenseTrendPoint[]
-  /** 各单元费用 */
-  units: IExpenseUnitItem[]
-  /** 单元费用合计 */
-  unit_total: number
+  /** 费用结构组成（环形图数据） */
+  compose: IExpenseComposeItem[]
 }
 
 /**

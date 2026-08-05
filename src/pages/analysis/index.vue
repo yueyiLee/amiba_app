@@ -234,6 +234,8 @@ onShow(() => {
         v-if="activeSeg === 'expense'"
         :data="expenseData"
         :loading="expenseLoading"
+        :error="expenseError"
+        @retry="loadPanel('expense', true)"
       />
       <CashPanel
         v-if="activeSeg === 'cash'"
