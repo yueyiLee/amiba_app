@@ -160,49 +160,100 @@ export interface ICustomerData {
 }
 
 /**
- * 商品分析（PRD 5.4.3）
+ * 商品分析（PRD v2.1 §5）
+ * 收入/支出双视角 + 价格变动 + 商品明细
  */
 
-/** 商品分析 3 项 KPI */
-export interface IProductKpi {
-  /** 在售商品 SKU 数 */
-  sku_count: number
-  /** 库存占用（在库金额） */
-  inventory_value: number
-  /** 平均毛利率（0-1 小数） */
+/** 收入类 KPI（PRD v2.1 §5.1） */
+export interface IProductSalesKpi {
+  /** 销售总数量（整数） */
+  total_qty: number
+  /** 销售总金额 */
+  total_sale: number
+  /** 平均毛利率（0-1 小数，加权口径） */
   avg_gm: number
 }
 
-/** Top 商品销售行 */
-export interface IProductTop {
+/** 支出类 KPI（PRD v2.1 §5.1） */
+export interface IProductPurchaseKpi {
+  /** 采购总数量（整数） */
+  total_qty: number
+  /** 采购总成本 */
+  total_cost: number
+}
+
+/** 商品排行条目（数量榜与金额榜复用，PRD v2.1 §5.1） */
+export interface IProductRankItem {
   product_id: number
   product_name: string
-  /** 销售额 */
-  sale: number
+  /** 数量（数量榜用） */
+  qty: number
+  /** 金额（金额榜用） */
+  amount: number
+}
+
+/** 商品价格变动条目（PRD v2.1 §5.1） */
+export interface IProductPriceChange {
+  /** 商品 ID（价格变动榜可能为 null，来自多笔成交聚合） */
+  product_id?: number
+  product_name?: string
+  /** 最低成交价 */
+  min_price: number
+  /** 最高成交价 */
+  max_price: number
+  /** 变动幅度（0-1 小数，正=涨、负=跌） */
+  change_rate: number
+  /** 成交样本数 */
+  sample_count: number
+}
+
+/** 收入类聚合数据 */
+export interface IProductSalesData {
+  kpi: IProductSalesKpi
+  /** 销售数量 TOP5 */
+  by_qty: IProductRankItem[]
+  /** 销售金额 TOP5 */
+  by_amount: IProductRankItem[]
+  /** 实际销售价变动 TOP5 */
+  price_change: IProductPriceChange[]
+}
+
+/** 支出类聚合数据 */
+export interface IProductPurchaseData {
+  kpi: IProductPurchaseKpi
+  /** 采购数量 TOP5 */
+  by_qty: IProductRankItem[]
+  /** 采购成本 TOP5 */
+  by_amount: IProductRankItem[]
+  /** 实际采购价变动 TOP5 */
+  price_change: IProductPriceChange[]
+}
+
+/** 商品明细行（跨 Tab 固定，PRD v2.1 §5.1） */
+export interface IProductDetailRow {
+  product_id: number
+  /** 商品名称 */
+  name: string
+  /** 销售总额 */
+  sale_amt: number
+  /** 采购总成本 */
+  cost_amt: number
+  /** 销售数量 */
+  sale_qty: number
+  /** 采购数量 */
+  purchase_qty: number
   /** 毛利率（0-1 小数） */
   gm: number
-  /** 当前库存数量 */
-  stock: number
-  /** 周转天数 */
-  turnover_days: number
 }
 
-/** 商品预警项 */
-export interface IProductAlert {
-  level: 'red' | 'yellow'
-  product_name: string
-  product_id: number
-  reason: string
-  /** 预警类型：low_margin / low_stock / slow_turnover */
-  type: 'low_margin' | 'low_stock' | 'slow_turnover'
-}
-
-/** 商品分析聚合数据（后端 /api/analysis/product 返回） */
+/** 商品分析聚合数据（后端 /api/analysis/product 返回，PRD v2.1 §13） */
 export interface IProductData {
-  kpi: IProductKpi
-  top_products: IProductTop[]
-  alerts: IProductAlert[]
-  alert_count: { red: number, yellow: number }
+  /** 收入类（销售）数据 */
+  sales: IProductSalesData
+  /** 支出类（采购）数据 */
+  purchase: IProductPurchaseData
+  /** 商品明细列表 */
+  detail: IProductDetailRow[]
 }
 
 /**
