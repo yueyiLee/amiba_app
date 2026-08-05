@@ -4,10 +4,14 @@ import { formatAmount, isIncome } from '@/api/types/transaction'
 import { getTransactionList } from '@/api/transaction'
 import DateRangePicker from '@/components/DateRangePicker.vue'
 import { useUserStore } from '@/store/user'
+import { useShare } from '@/utils/share/useShare'
+import { SHARE_CONFIGS } from '@/utils/share/config'
 import dayjs from 'dayjs'
 
 defineOptions({
   name: 'Home',
+  // 小程序端：显式声明分享钩子，微信才会识别页面已设置分享
+  ...useShare(SHARE_CONFIGS.index),
 })
 definePage({
   type: 'home',

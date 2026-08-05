@@ -4,6 +4,13 @@ import { storeToRefs } from 'pinia'
 import { LOGIN_PAGE } from '@/router/config'
 import { useUserStore } from '@/store/user'
 import { useTokenStore } from '@/store/token'
+import { useShare } from '@/utils/share/useShare'
+import { SHARE_CONFIGS } from '@/utils/share/config'
+
+defineOptions({
+  // 小程序端：显式声明分享钩子，微信才会识别页面已设置分享
+  ...useShare(SHARE_CONFIGS.me),
+})
 
 definePage({
   style: {

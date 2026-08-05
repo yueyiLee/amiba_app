@@ -9,6 +9,13 @@ import DailyOperationKpi from './components/DailyOperationKpi.vue'
 import EmployeeSalary from './components/EmployeeSalary.vue'
 import BusinessCharts from './components/BusinessCharts.vue'
 import InventoryOverview from './components/InventoryOverview.vue'
+import { useShare } from '@/utils/share/useShare'
+import { SHARE_CONFIGS } from '@/utils/share/config'
+
+defineOptions({
+  // 小程序端：显式声明分享钩子，微信才会识别页面已设置分享
+  ...useShare(SHARE_CONFIGS.dashboard),
+})
 
 definePage({
   style: {
