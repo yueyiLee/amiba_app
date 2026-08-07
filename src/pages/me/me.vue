@@ -42,21 +42,14 @@ const peopleMenus = [
   { key: 'workhours', label: '工时工资', icon: 'i-carbon-chart-line-data', path: '/pages/me/workhours-salary' },
 ]
 
-const pcMenus = [
-  { key: 'setting', label: '经营设置', icon: 'i-carbon-settings' },
+const settingMenus = [
+  { key: 'expense-types', label: '收支类型设置', icon: 'i-carbon-catalog-publish', path: '/pages/me/settings/expense-types' },
+  { key: 'expense-items', label: '杂费类别设置', icon: 'i-carbon-tag', path: '/pages/me/settings/expense-items' },
+  { key: 'display', label: '显示和导出设置', icon: 'i-carbon-data-view', path: '/pages/me/settings/display' },
 ]
 
 function goPage(path: string) {
   uni.navigateTo({ url: path })
-}
-
-function handlePcMenu() {
-  uni.showModal({
-    title: '提示',
-    content: '请前往 PC 端使用',
-    showCancel: false,
-    confirmText: '我知道了',
-  })
 }
 
 function handleLogout() {
@@ -126,20 +119,19 @@ function handleLogout() {
       </view>
     </view>
 
-    <!-- PC 端功能（仅入口） -->
+    <!-- 经营设置 -->
     <view class="section">
-      <view class="section-label">PC 端功能（仅入口）</view>
+      <view class="section-label">经营设置</view>
       <view class="group">
         <view
-          v-for="m in pcMenus"
+          v-for="m in settingMenus"
           :key="m.key"
           class="cell"
           hover-class="cell-hover"
-          @click="handlePcMenu"
+          @click="goPage(m.path)"
         >
           <text class="cell-icon" :class="m.icon" />
           <text class="cell-label">{{ m.label }}</text>
-          <view class="pc-tag">仅PC</view>
           <text class="i-carbon-chevron-right cell-arrow" />
         </view>
       </view>
@@ -282,14 +274,6 @@ function handleLogout() {
   font-size: 32rpx;
   color: #c5ccd6;
   margin-left: 12rpx;
-}
-.pc-tag {
-  font-size: 20rpx;
-  color: #f59e0b;
-  background: #fef4e2;
-  border-radius: 8rpx;
-  padding: 4rpx 12rpx;
-  margin-left: 16rpx;
 }
 
 /* 退出登录 */
