@@ -20,9 +20,9 @@ const filteredItems = computed(() => {
 // 仅展示前 10 条
 const displayItems = computed(() => filteredItems.value.slice(0, 10))
 
-// PRD 未定义全量库存页，点击给出明确反馈
+/** 查看全部 → 跳转库存管理列表页 */
 function onViewAll() {
-  uni.showToast({ title: '全量库存页敬请期待', icon: 'none' })
+  uni.navigateTo({ url: '/pages/me/inventory-list' })
 }
 </script>
 

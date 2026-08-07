@@ -13,7 +13,7 @@ definePage({
   },
 })
 
-const username = ref('zhangjm')
+const username = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const errorMsg = ref('')
