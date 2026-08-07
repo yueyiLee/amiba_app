@@ -93,6 +93,9 @@ export default defineConfig({
     'i-carbon-building',
     'i-carbon-warning-alt',
     'i-carbon-phone',
+    // 合同管理模块
+    'i-carbon-trash-can',
+    'i-carbon-checkmark',
     // 记录页 + 收支表单
     'i-carbon-calendar',
     'i-carbon-wallet',

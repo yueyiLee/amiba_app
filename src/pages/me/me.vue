@@ -32,10 +32,10 @@ const displayName = computed(() => userInfo.value.nickname || userInfo.value.use
 const assistMenus = [
   { key: 'customer', label: '客户管理', icon: 'i-carbon-catalog', path: '/pages/me/customer-list' },
   { key: 'product', label: '商品管理', icon: 'i-carbon-cube', path: '/pages/me/product-list' },
+  { key: 'contract', label: '合同管理', icon: 'i-carbon-document', path: '/pages/me/contract-list' },
 ]
 
 const pcMenus = [
-  { key: 'contract', label: '合同管理', icon: 'i-carbon-document' },
   { key: 'inventory', label: '库存管理', icon: 'i-carbon-inventory-management' },
   { key: 'employee', label: '员工管理', icon: 'i-carbon-group' },
   { key: 'setting', label: '经营设置', icon: 'i-carbon-settings' },

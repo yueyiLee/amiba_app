@@ -1,0 +1,2174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=375, initial-scale=1.0, user-scalable=no">
+<title>合同管理 - UI 原型 v2</title>
+<style>
+/* ============================================================
+   Reset & Design Tokens
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --color-primary: #2e6cf0;
+  --color-primary-dark: #2356c8;
+  --color-primary-light: #eaf1fe;
+  --color-primary-soft: #f5f8ff;
+  --color-success: #16a34a;
+  --color-success-bg: #e6f7ee;
+  --color-danger: #e5484d;
+  --color-danger-bg: #fdecec;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fef4e2;
+  --bg-page: #f5f7fa;
+  --bg-card: #ffffff;
+  --bg-hover: #f7f9fc;
+  --bg-chip: #f1f3f5;
+  --text-primary: #1f2329;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9aa1ac;
+  --text-placeholder: #b6bcc6;
+  --border-light: #f1f3f5;
+  --radius-card: 10px;
+  --radius-chip: 16px;
+  --radius-button: 22px;
+  --radius-full: 50%;
+  --shadow-card: 0 2px 8px rgba(16,24,40,0.04);
+  --shadow-fab: 0 4px 12px rgba(46,108,240,0.4);
+  --shadow-bottom-bar: 0 -2px 8px rgba(16,24,40,0.06);
+  --shadow-sheet: 0 -8px 24px rgba(16,24,40,0.12);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+  background: #e8ecf1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.phone-frame {
+  width: 375px;
+  min-height: 812px;
+  background: var(--bg-page);
+  border-radius: 32px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 2px #1a1a1a;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.status-bar {
+  height: 40px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2329;
+  flex-shrink: 0;
+}
+.status-bar .time { font-size: 13px; }
+.status-bar .icons { display: flex; gap: 6px; align-items: center; }
+.status-bar .icons svg { width: 14px; height: 14px; }
+
+.nav-bar {
+  height: 44px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  position: relative;
+  flex-shrink: 0;
+  border-bottom: 0.5px solid var(--border-light);
+}
+.nav-bar .back-btn {
+  position: absolute;
+  left: 12px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+.nav-bar .back-btn:hover { background: #f1f3f5; }
+.nav-bar .back-btn svg { width: 20px; height: 20px; color: var(--text-primary); }
+.nav-bar .title { font-size: 17px; font-weight: 600; color: var(--text-primary); }
+
+.page {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: none;
+  -webkit-overflow-scrolling: touch;
+  flex-direction: column;
+}
+.page.active { display: flex; }
+
+/* ============================================================
+   List Page
+   ============================================================ */
+.search-bar-wrap {
+  display: flex;
+  align-items: center;
+  padding: 12px 12px 8px;
+  gap: 8px;
+}
+.search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 36px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 0 14px;
+  box-shadow: var(--shadow-card);
+}
+.search-box svg { width: 16px; height: 16px; color: var(--text-tertiary); flex-shrink: 0; }
+.search-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-left: 6px;
+}
+.search-box input::placeholder { color: var(--text-placeholder); }
+.search-add-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(46,108,240,0.3);
+  transition: transform 0.15s;
+}
+.search-add-btn:active { transform: scale(0.95); }
+.search-add-btn svg { width: 18px; height: 18px; color: #fff; }
+
+.filter-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.filter-row::-webkit-scrollbar { display: none; }
+.filter-chip {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: var(--radius-chip);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  user-select: none;
+}
+.filter-chip.active { background: var(--color-primary); color: #fff; }
+
+.list-content { flex: 1; position: relative; padding-bottom: 80px; }
+
+.contract-card {
+  background: #fff;
+  border-radius: var(--radius-card);
+  padding: 14px 14px 14px 18px;
+  margin: 0 12px 10px;
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.contract-card:active { background: var(--bg-hover); }
+.card-dir-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+}
+.card-dir-bar.sale     { background: var(--color-success); }
+.card-dir-bar.purchase { background: var(--color-danger); }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.card-no { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.status-badge.in_progress { background: var(--color-primary-light); color: var(--color-primary); }
+.status-badge.completed   { background: var(--color-success-bg); color: var(--color-success); }
+.status-badge.cancelled   { background: var(--bg-chip); color: var(--text-secondary); }
+
+.card-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-customer {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-customer svg { width: 14px; height: 14px; color: var(--text-tertiary); flex-shrink: 0; }
+.card-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+.card-amount.purchase-amount { color: var(--text-primary); }
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 0.5px dashed var(--border-light);
+}
+.card-summary {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-summary .summary-item { display: flex; align-items: center; gap: 3px; }
+.card-summary .summary-item svg { width: 12px; height: 12px; }
+.card-date { font-size: 11px; color: var(--text-tertiary); }
+
+/* FAB */
+.fab {
+  position: absolute;
+  right: 16px;
+  bottom: 40px;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-fab);
+  z-index: 40;
+  transition: transform 0.15s;
+}
+.fab:active { transform: scale(0.95); }
+.fab svg { width: 26px; height: 26px; color: #fff; }
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+}
+.empty-state .empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  background: #f1f3f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.empty-state .empty-icon svg { width: 40px; height: 40px; color: #c5ccd6; }
+.empty-state .empty-title { font-size: 15px; color: var(--text-secondary); font-weight: 500; margin-bottom: 6px; }
+.empty-state .empty-desc  { font-size: 13px; color: var(--text-tertiary); }
+
+/* ============================================================
+   Detail Page
+   ============================================================ */
+.detail-content { flex: 1; overflow-y: auto; padding-bottom: 10px; }
+
+.status-banner {
+  margin: 12px;
+  padding: 14px;
+  border-radius: var(--radius-card);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.status-banner.sale {
+  background: linear-gradient(135deg, #e6f7ee 0%, #d4f0df 100%);
+}
+.status-banner.purchase {
+  background: linear-gradient(135deg, #fdecec 0%, #fcd9d9 100%);
+}
+.banner-left { display: flex; flex-direction: column; }
+.banner-no { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.banner-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.dir-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.dir-badge.sale     { background: rgba(22,163,74,0.15); color: var(--color-success); }
+.dir-badge.purchase { background: rgba(229,72,77,0.15); color: var(--color-danger); }
+.banner-icon { width: 36px; height: 36px; opacity: 0.5; }
+.banner-icon.sale svg { color: var(--color-success); }
+.banner-icon.purchase svg { color: var(--color-danger); }
+
+/* Info Card */
+.info-card {
+  background: #fff;
+  margin: 0 12px 10px;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.info-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  padding: 12px 14px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.info-card-title .count-tag {
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.info-card-title .count-tag.zero { background: transparent; color: var(--text-tertiary); }
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 0.5px solid var(--border-light);
+}
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 14px; color: var(--text-secondary); flex-shrink: 0; }
+.info-value { font-size: 14px; color: var(--text-primary); font-weight: 500; text-align: right; max-width: 200px; }
+.info-value.large { font-size: 22px; font-weight: 700; color: var(--color-primary); }
+.info-value.muted { color: var(--text-tertiary); font-weight: 400; font-style: italic; }
+
+/* Item rows in detail */
+.item-row {
+  padding: 12px 14px;
+  border-bottom: 0.5px solid var(--border-light);
+}
+.item-row:last-child { border-bottom: none; }
+.item-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.item-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.item-amount { font-size: 14px; font-weight: 600; color: var(--color-primary); }
+.item-row-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.item-meta-detail .qty-price { display: flex; gap: 8px; align-items: center; }
+.item-meta-detail .qty-price span { padding: 2px 8px; background: var(--bg-chip); border-radius: 4px; }
+.service-ref {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+  margin-right: 4px;
+  font-size: 11px;
+}
+
+/* Summary card */
+.summary-card {
+  margin: 0 12px 14px;
+  background: linear-gradient(135deg, var(--color-primary-soft) 0%, #eaf1fe 100%);
+  border-radius: var(--radius-card);
+  padding: 14px;
+  box-shadow: var(--shadow-card);
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.summary-row .summary-amount { color: var(--text-primary); font-weight: 500; }
+.summary-row.total {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed #c5d8f9;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.summary-row.total .summary-amount { font-size: 22px; font-weight: 700; color: var(--color-primary); }
+
+/* ============================================================
+   Form Page
+   ============================================================ */
+.form-content { flex: 1; overflow-y: auto; padding: 12px 12px 8px; }
+
+.form-card {
+  background: #fff;
+  border-radius: var(--radius-card);
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-card);
+}
+.card-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.card-header-bar .card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.card-header-bar .card-count {
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.card-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+/* Form Field - Row */
+.form-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.form-row:last-child { margin-bottom: 0; }
+.form-field {
+  flex: 1;
+  min-width: 0;
+}
+.form-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.form-label .required { color: var(--color-danger); font-size: 13px; }
+.form-input, .form-select {
+  width: 100%;
+  height: 38px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+.form-input:focus, .form-select:focus { border-color: var(--color-primary); }
+.form-input::placeholder { color: var(--text-placeholder); font-size: 13px; }
+.form-textarea {
+  width: 100%;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: #fff;
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  line-height: 1.6;
+  min-height: 70px;
+}
+.form-textarea:focus { border-color: var(--color-primary); }
+.form-textarea::placeholder { color: var(--text-placeholder); }
+
+.selector-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.selector-row:active { border-color: var(--color-primary); }
+.selector-row .placeholder { color: var(--text-placeholder); font-size: 14px; }
+.selector-row .selected-value { color: var(--text-primary); font-size: 14px; font-weight: 500; }
+.selector-row svg { width: 14px; height: 14px; color: var(--text-tertiary); flex-shrink: 0; }
+
+/* Chip selector */
+.chip-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.chip-option {
+  padding: 6px 12px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+}
+.chip-option.selected { background: var(--color-primary); color: #fff; }
+
+/* Line item card (商品/服务行项) */
+.line-item {
+  background: #f7f9fc;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s;
+}
+.line-item:active { background: #eef1f5; }
+.line-item-info { flex: 1; min-width: 0; }
+.line-item-name { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+.line-item-detail { font-size: 11px; color: var(--text-tertiary); display: flex; gap: 6px; align-items: center; }
+.line-item-detail .sep { color: #c5ccd6; }
+.line-item-amount { font-size: 14px; font-weight: 600; color: var(--color-primary); margin-left: 8px; flex-shrink: 0; }
+.line-item-delete {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(229,72,77,0.08);
+  color: var(--color-danger);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: 6px;
+  transition: background 0.15s;
+}
+.line-item-delete:active { background: rgba(229,72,77,0.15); }
+.line-item-delete svg { width: 14px; height: 14px; }
+
+.line-empty {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  padding: 14px;
+  background: #fafbfc;
+  border: 1px dashed var(--border-light);
+  border-radius: 8px;
+}
+
+.add-row-btn {
+  width: 100%;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px dashed var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 4px;
+}
+.add-row-btn:active { background: #eaf1fe; }
+.add-row-btn svg { width: 14px; height: 14px; }
+
+/* Summary bar (above bottom action bar) */
+.amount-summary-bar {
+  background: linear-gradient(135deg, var(--color-primary-soft) 0%, #eaf1fe 100%);
+  margin: 0 12px 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-card);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.amount-summary-bar .label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+.amount-summary-bar .total { font-size: 22px; font-weight: 700; color: var(--color-primary); }
+
+/* Bottom Bar */
+.bottom-bar {
+  background: #fff;
+  padding: 10px 12px;
+  display: flex;
+  gap: 10px;
+  box-shadow: var(--shadow-bottom-bar);
+  flex-shrink: 0;
+  z-index: 20;
+}
+.btn {
+  height: 44px;
+  border-radius: var(--radius-button);
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s;
+  user-select: none;
+}
+.btn:active { opacity: 0.85; }
+.btn-primary { flex: 1; background: var(--color-primary); color: #fff; }
+.btn-danger-outline {
+  width: 100px; flex-shrink: 0;
+  background: transparent;
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+}
+.btn:disabled { opacity: 0.5; pointer-events: none; }
+
+/* ============================================================
+   Bottom Sheet (商品/服务编辑)
+   ============================================================ */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 90;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.sheet-overlay.show { opacity: 1; pointer-events: all; }
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  z-index: 95;
+  padding: 8px 0 20px;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: var(--shadow-sheet);
+}
+.sheet-overlay.show .sheet { transform: translateY(0); }
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: #d4d9e1;
+  margin: 8px auto 8px;
+}
+.sheet-header {
+  padding: 0 16px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 0.5px solid var(--border-light);
+}
+.sheet-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.sheet-close {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: #f1f3f5;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.sheet-close svg { width: 14px; height: 14px; color: var(--text-tertiary); }
+.sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* Product picker */
+.picker-search {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  background: #f7f9fc;
+  border-radius: 19px;
+  padding: 0 14px;
+  margin-bottom: 12px;
+  border: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+.picker-search:focus-within { border-color: var(--color-primary); background: #fff; }
+.picker-search svg { width: 16px; height: 16px; color: var(--text-tertiary); flex-shrink: 0; }
+.picker-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-left: 6px;
+}
+.picker-search input::placeholder { color: var(--text-placeholder); }
+
+.product-list { max-height: 180px; overflow-y: auto; margin-bottom: 12px; border: 1px solid var(--border-light); border-radius: 8px; }
+.product-item {
+  padding: 10px 12px;
+  border-bottom: 0.5px solid var(--border-light);
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.product-item:last-child { border-bottom: none; }
+.product-item:active { background: var(--bg-hover); }
+.product-item.selected { background: var(--color-primary-soft); }
+.product-item-name { font-size: 14px; color: var(--text-primary); font-weight: 500; }
+.product-item-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+.product-item-price { font-size: 14px; font-weight: 600; color: var(--color-primary); flex-shrink: 0; }
+.product-list-empty {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  padding: 20px;
+  background: #fafbfc;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.sheet-field {
+  margin-bottom: 12px;
+}
+.sheet-field-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.sheet-field-label .required { color: var(--color-danger); font-size: 13px; }
+.sheet-field-input {
+  width: 100%;
+  height: 38px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: #fff;
+  outline: none;
+  font-family: inherit;
+}
+.sheet-field-input:focus { border-color: var(--color-primary); }
+.sheet-field-input::placeholder { color: var(--text-placeholder); font-size: 13px; }
+.sheet-field-input[readonly] { background: #f7f9fc; color: var(--text-tertiary); }
+
+.sheet-actions {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px 0;
+  border-top: 0.5px solid var(--border-light);
+}
+.sheet-actions .btn { flex: 1; }
+.sheet-actions .btn-outline {
+  background: #fff;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+}
+
+/* Service selector (radio list) */
+.service-list {
+  max-height: 220px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+}
+.service-item {
+  padding: 10px 12px;
+  border-bottom: 0.5px solid var(--border-light);
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.service-item:last-child { border-bottom: none; }
+.service-item:active { background: var(--bg-hover); }
+.service-item.selected { background: var(--color-primary-soft); }
+.service-item-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.service-radio {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid #c5ccd6;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.service-item.selected .service-radio { border-color: var(--color-primary); background: var(--color-primary); }
+.service-item.selected .service-radio::after {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+.service-info { flex: 1; min-width: 0; }
+.service-name { font-size: 14px; color: var(--text-primary); font-weight: 500; }
+.service-ref-cost { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+
+/* Sheet subtotal display */
+.sheet-subtotal {
+  background: var(--color-primary-soft);
+  padding: 10px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.sheet-subtotal-label { font-size: 13px; color: var(--text-secondary); }
+.sheet-subtotal-amount { font-size: 18px; font-weight: 700; color: var(--color-primary); }
+
+/* ============================================================
+   Modal
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal-dialog {
+  width: 290px;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.modal-header { padding: 20px 20px 0; text-align: center; }
+.modal-title { font-size: 17px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+.modal-msg { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+.modal-contract-no {
+  display: inline-block;
+  background: var(--bg-chip);
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+  margin-top: 6px;
+}
+.modal-actions {
+  display: flex;
+  border-top: 0.5px solid #eee;
+  margin-top: 16px;
+}
+.modal-btn {
+  flex: 1;
+  height: 48px;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.modal-btn:active { background: #f7f9fc; }
+.modal-btn.cancel { color: var(--text-secondary); }
+.modal-btn.confirm { color: var(--color-danger); font-weight: 600; }
+.modal-btn + .modal-btn { border-left: 0.5px solid #eee; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: rgba(0,0,0,0.78);
+  color: #fff;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+/* Quick switch buttons */
+.proto-tabs {
+  position: absolute;
+  top: -34px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  padding: 3px;
+  z-index: 50;
+  white-space: nowrap;
+  flex-wrap: wrap;
+  max-width: 360px;
+  justify-content: center;
+}
+.proto-tab {
+  padding: 4px 8px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  color: rgba(255,255,255,0.65);
+  border: none;
+  background: transparent;
+  transition: all 0.2s;
+}
+.proto-tab:hover { color: rgba(255,255,255,0.9); }
+.proto-tab.active { background: rgba(255,255,255,0.2); color: #fff; }
+</style>
+</head>
+<body>
+
+<div style="position: relative; display: inline-block;">
+
+  <div class="proto-tabs">
+    <button class="proto-tab active" data-page="list" onclick="switchProtoPage('list')">列表</button>
+    <button class="proto-tab" data-page="detail" onclick="switchProtoPage('detail')">详情</button>
+    <button class="proto-tab" data-page="form" onclick="switchProtoPage('form')">新建</button>
+    <button class="proto-tab" data-page="form-edit" onclick="switchProtoPage('form-edit')">编辑</button>
+    <button class="proto-tab" data-page="product-sheet" onclick="switchProtoPage('product-sheet')">商品行项</button>
+    <button class="proto-tab" data-page="service-sheet" onclick="switchProtoPage('service-sheet')">服务行项</button>
+  </div>
+
+  <div class="phone-frame" id="phoneFrame">
+
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <span class="icons">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C17.93 2.93 6.07 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-6-6l2 2c2.76-2.76 7.24-2.76 10 0l2-2C13.14 8.14 5.86 8.14 3 11z"/></svg>
+        <svg viewBox="0 0 24 12" fill="currentColor"><rect x="0" y="0" width="20" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="2" y="2" width="16" height="7" rx="1" fill="currentColor"/><rect x="23" y="2" width="1" height="7" rx="0.5" fill="currentColor" opacity="0.4"/></svg>
+      </span>
+    </div>
+
+    <!-- =================== PAGE: LIST =================== -->
+    <div class="page active" id="page-list">
+      <div class="nav-bar">
+        <div class="back-btn" onclick="navigateBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <span class="title">合同管理</span>
+      </div>
+
+      <div class="search-bar-wrap">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="搜索合同编号 / 客户" id="searchInput" oninput="filterContracts()">
+        </div>
+        <div class="search-add-btn" onclick="navigateTo('form')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-chip active" data-filter="status" data-value="all" onclick="toggleStatusFilter(this)">全部状态</div>
+        <div class="filter-chip" data-filter="status" data-value="in_progress" onclick="toggleStatusFilter(this)">进行中</div>
+        <div class="filter-chip" data-filter="status" data-value="completed" onclick="toggleStatusFilter(this)">已完成</div>
+        <div class="filter-chip" data-filter="status" data-value="cancelled" onclick="toggleStatusFilter(this)">已取消</div>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-chip active" data-filter="direction" data-value="all" onclick="toggleDirFilter(this)">全部方向</div>
+        <div class="filter-chip" data-filter="direction" data-value="sale" onclick="toggleDirFilter(this)">销售合同</div>
+        <div class="filter-chip" data-filter="direction" data-value="purchase" onclick="toggleDirFilter(this)">采购合同</div>
+      </div>
+
+      <div class="list-content">
+        <div id="cardList"></div>
+        <div class="fab" onclick="navigateTo('form')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== PAGE: DETAIL =================== -->
+    <div class="page" id="page-detail">
+      <div class="nav-bar">
+        <div class="back-btn" onclick="navigateBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <span class="title">合同详情</span>
+      </div>
+
+      <div class="detail-content" id="detailContent"></div>
+
+      <div class="bottom-bar">
+        <button class="btn btn-danger-outline" onclick="showDeleteModal()">删除</button>
+        <button class="btn btn-primary" onclick="navigateToEdit()">编辑</button>
+      </div>
+    </div>
+
+    <!-- =================== PAGE: FORM (新建/编辑) =================== -->
+    <div class="page" id="page-form">
+      <div class="nav-bar">
+        <div class="back-btn" onclick="navigateBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <span class="title" id="formTitle">新建合同</span>
+      </div>
+
+      <div class="form-content">
+        <!-- 基本信息 -->
+        <div class="form-card">
+          <div class="card-header-bar">
+            <span class="card-title">基本信息</span>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <div class="form-label">客户<span class="required">*</span></div>
+              <div class="selector-row" onclick="showCustomerSheet()">
+                <span id="customerDisplay" class="placeholder">请选择客户</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <div class="form-label">合同方向<span class="required">*</span></div>
+              <select id="directionInput" class="form-select" onchange="onDirectionChange()">
+                <option value="sale">销售(我方卖出商品)</option>
+                <option value="purchase">采购(我方买入商品)</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <div class="form-label">签订日期</div>
+              <input type="date" class="form-input" id="dateInput" value="2026-08-06">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <div class="form-label">状态</div>
+              <select id="statusInput" class="form-select">
+                <option value="in_progress">进行中</option>
+                <option value="completed">已完成</option>
+                <option value="cancelled">已取消</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <div class="form-label">备注</div>
+              <textarea class="form-textarea" placeholder="可选：合同补充说明、对方联系人、付款条款等" id="noteInput"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 商品明细 -->
+        <div class="form-card">
+          <div class="card-header-bar">
+            <span class="card-title">商品明细</span>
+            <span class="card-count" id="itemCount">0 件</span>
+          </div>
+          <div class="card-desc">销售合同填卖出商品 / 采购合同填买入商品，商品由主字典搜索指定。</div>
+          <div id="productItemsContainer"></div>
+          <div class="add-row-btn" onclick="openProductSheet()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            添加商品明细
+          </div>
+        </div>
+
+        <!-- 服务费明细 -->
+        <div class="form-card">
+          <div class="card-header-bar">
+            <span class="card-title">服务费明细</span>
+            <span class="card-count" id="serviceCount">0 项</span>
+          </div>
+          <div class="card-desc">从「服务费用」中选择服务，填写该合同应发生的服务费用。</div>
+          <div id="serviceItemsContainer"></div>
+          <div class="add-row-btn" onclick="openServiceSheet()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            添加服务费
+          </div>
+        </div>
+      </div>
+
+      <!-- 合计金额条 -->
+      <div class="amount-summary-bar">
+        <span class="label">合同合计金额</span>
+        <span class="total" id="formTotalAmount">¥0.00</span>
+      </div>
+
+      <div class="bottom-bar">
+        <button class="btn btn-danger-outline" id="formDeleteBtn" style="display:none" onclick="showDeleteModal()">删除</button>
+        <button class="btn btn-primary" id="formSaveBtn" onclick="submitForm()">保存合同</button>
+      </div>
+    </div>
+
+  </div><!-- /phone-frame -->
+
+  <!-- =================== Sheet: Customer (basic info) =================== -->
+  <div class="sheet-overlay" id="customerSheet">
+    <div class="sheet" style="max-height: 360px;">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-title">选择客户</span>
+        <div class="sheet-close" onclick="closeSheet('customerSheet')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+      </div>
+      <div class="sheet-body" style="padding: 8px 16px 16px;">
+        <div id="customerList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== Sheet: Product Item =================== -->
+  <div class="sheet-overlay" id="productSheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-title" id="productSheetTitle">添加商品明细</span>
+        <div class="sheet-close" onclick="closeSheet('productSheet')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+      </div>
+      <div class="sheet-body">
+        <div class="sheet-field">
+          <div class="sheet-field-label">商品<span class="required">*</span></div>
+          <div class="picker-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="搜索商品名称" id="productSearch" oninput="filterProductList()">
+          </div>
+          <div class="product-list" id="productList"></div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <div class="sheet-field-label">数量<span class="required">*</span></div>
+            <input type="number" class="sheet-field-input" placeholder="整数" id="itemQty" min="1" oninput="updateItemSubtotal()">
+          </div>
+          <div class="form-field">
+            <div class="sheet-field-label">实际交易金额<span class="required">*</span></div>
+            <input type="number" class="sheet-field-input" placeholder="0.00" id="itemPrice" min="0" step="0.01" oninput="updateItemSubtotal()">
+          </div>
+        </div>
+
+        <div class="sheet-subtotal">
+          <span class="sheet-subtotal-label">本行小计</span>
+          <span class="sheet-subtotal-amount" id="itemSubtotal">¥0.00</span>
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button class="btn btn-outline" onclick="closeSheet('productSheet')">取消</button>
+        <button class="btn btn-primary" onclick="confirmProductItem()">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== Sheet: Service Item =================== -->
+  <div class="sheet-overlay" id="serviceSheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-title" id="serviceSheetTitle">添加服务费</span>
+        <div class="sheet-close" onclick="closeSheet('serviceSheet')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+      </div>
+      <div class="sheet-body">
+        <div class="sheet-field">
+          <div class="sheet-field-label">选择服务<span class="required">*</span></div>
+          <div class="service-list" id="serviceList"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <div class="sheet-field-label">参考费用(¥)</div>
+            <input type="number" class="sheet-field-input" id="serviceRefCost" readonly tabindex="-1" placeholder="选服务后自动填">
+          </div>
+          <div class="form-field">
+            <div class="sheet-field-label">实际服务费用<span class="required">*</span></div>
+            <input type="number" class="sheet-field-input" placeholder="0.00" id="serviceAmount" min="0" step="0.01" oninput="updateServiceTotal()">
+          </div>
+        </div>
+        <div class="sheet-subtotal">
+          <span class="sheet-subtotal-label">本项小计</span>
+          <span class="sheet-subtotal-amount" id="serviceSubtotal">¥0.00</span>
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button class="btn btn-outline" onclick="closeSheet('serviceSheet')">取消</button>
+        <button class="btn btn-primary" onclick="confirmServiceItem()">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== Modal: Delete Confirmation =================== -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">删除合同</div>
+        <div class="modal-msg">
+          确定删除合同<br>
+          <span class="modal-contract-no" id="deleteContractNo">HT-2025-001</span>
+        </div>
+        <div class="modal-msg" style="margin-top:4px; font-size:12px; color:var(--text-tertiary);">删除后不可恢复</div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" onclick="hideDeleteModal()">取消</button>
+        <button class="modal-btn confirm" onclick="confirmDelete()">删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+// ============================================================
+// Mock Data
+// ============================================================
+const mockProducts = [
+  { id: 1, name: '华为 MateBook X Pro', brand: '华为', unit: '台', sale_price: 8999, purchase_price: 7200 },
+  { id: 2, name: 'iPhone 16 Pro Max', brand: '苹果', unit: '台', sale_price: 9999, purchase_price: 8200 },
+  { id: 3, name: '联想 ThinkPad X1', brand: '联想', unit: '台', sale_price: 12999, purchase_price: 10500 },
+  { id: 4, name: '戴尔 XPS 15', brand: '戴尔', unit: '台', sale_price: 14999, purchase_price: 12000 },
+  { id: 5, name: '罗技 MX Master 3S', brand: '罗技', unit: '个', sale_price: 799, purchase_price: 580 },
+  { id: 6, name: '索尼 WH-1000XM5', brand: '索尼', unit: '副', sale_price: 2399, purchase_price: 1850 },
+];
+
+const mockServices = [
+  { id: 1, name: '设备安装调试', referenceCost: 500 },
+  { id: 2, name: '技术支持服务', referenceCost: 800 },
+  { id: 3, name: '员工培训', referenceCost: 1500 },
+  { id: 4, name: '数据迁移', referenceCost: 1200 },
+  { id: 5, name: '系统运维(月)', referenceCost: 2000 },
+  { id: 6, name: '硬件保修延长', referenceCost: 600 },
+];
+
+const mockCustomers = [
+  { id: 1, name: '上海科技有限公司' },
+  { id: 2, name: '星辰软件开发' },
+  { id: 3, name: '北京贸易集团' },
+  { id: 4, name: '深圳创新工场' },
+  { id: 5, name: '杭州数字传媒' },
+];
+
+const mockContracts = [
+  {
+    id: 1,
+    contractNo: 'HT-2025-001',
+    customerId: 1,
+    customerName: '上海科技有限公司',
+    status: 'in_progress',
+    startDate: '2025-03-01',
+    endDate: '2025-12-31',
+    date: '2025-02-28',
+    direction: 'sale',
+    note: '包含 6 个月免费维护期',
+    items: [
+      { id: 101, productId: 1, productName: '华为 MateBook X Pro', quantity: 10, actualPrice: 8800, amount: 88000 },
+      { id: 102, productId: 5, productName: '罗技 MX Master 3S', quantity: 10, actualPrice: 750, amount: 7500 },
+    ],
+    services: [
+      { id: 201, serviceId: 1, serviceName: '设备安装调试', amount: 500 },
+      { id: 202, serviceId: 3, serviceName: '员工培训', amount: 1500 },
+    ],
+  },
+  {
+    id: 2,
+    contractNo: 'HT-2025-002',
+    customerId: 5,
+    customerName: '杭州数字传媒',
+    status: 'completed',
+    startDate: '2025-01-15',
+    endDate: '2025-06-15',
+    date: '2025-01-10',
+    direction: 'purchase',
+    note: '已付清全款',
+    items: [
+      { id: 103, productId: 6, productName: '索尼 WH-1000XM5', quantity: 20, actualPrice: 1800, amount: 36000 },
+    ],
+    services: [
+      { id: 203, serviceId: 2, serviceName: '技术支持服务', amount: 800 },
+    ],
+  },
+  {
+    id: 3,
+    contractNo: 'HT-2025-003',
+    customerId: 3,
+    customerName: '北京贸易集团',
+    status: 'completed',
+    startDate: '2024-09-01',
+    endDate: '2025-08-31',
+    date: '2024-08-25',
+    direction: 'sale',
+    note: '大额整机采购合同，已按期交付并结清',
+    items: [
+      { id: 104, productId: 2, productName: 'iPhone 16 Pro Max', quantity: 20, actualPrice: 9800, amount: 196000 },
+      { id: 105, productId: 3, productName: '联想 ThinkPad X1', quantity: 10, actualPrice: 12500, amount: 125000 },
+    ],
+    services: [
+      { id: 204, serviceId: 1, serviceName: '设备安装调试', amount: 1500 },
+      { id: 205, serviceId: 5, serviceName: '系统运维(月)', amount: 2500 },
+      { id: 206, serviceId: 6, serviceName: '硬件保修延长', amount: 1000 },
+    ],
+  },
+  {
+    id: 4,
+    contractNo: 'HT-2025-004',
+    customerId: 4,
+    customerName: '深圳创新工场',
+    status: 'in_progress',
+    startDate: '2025-07-01',
+    endDate: '2025-12-31',
+    date: '2025-06-25',
+    direction: 'sale',
+    note: '交付完成，验收与回款进行中',
+    items: [
+      { id: 106, productId: 4, productName: '戴尔 XPS 15', quantity: 5, actualPrice: 14200, amount: 71000 },
+    ],
+    services: [
+      { id: 207, serviceId: 4, serviceName: '数据迁移', amount: 1200 },
+    ],
+  },
+  {
+    id: 5,
+    contractNo: 'HT-2025-005',
+    customerId: 2,
+    customerName: '星辰软件开发',
+    status: 'cancelled',
+    startDate: '2025-05-01',
+    endDate: '2025-11-30',
+    date: '2025-04-20',
+    direction: 'sale',
+    note: '客户预算削减，主动取消',
+    items: [
+      { id: 107, productId: 6, productName: '索尼 WH-1000XM5', quantity: 5, actualPrice: 2200, amount: 11000 },
+    ],
+    services: [],
+  },
+];
+
+// ============================================================
+// State
+// ============================================================
+let currentPage = 'list';
+let currentDetailId = 1;
+let isEditMode = false;
+let editingContractId = null;
+let statusFilter = 'all';
+let directionFilter = 'all';
+
+let formState = {
+  customerId: null,
+  customerName: '',
+  direction: 'sale',
+  date: '2026-08-06',
+  status: 'in_progress',
+  note: '',
+  items: [],
+  services: [],
+};
+
+let editingProductIndex = -1;
+let editingServiceIndex = -1;
+let currentSelectedProductId = null;
+
+const pageStack = [];
+
+// ============================================================
+// Utility
+// ============================================================
+function fmtMoney(n) {
+  const v = Number(n) || 0;
+  return v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function calcItemsTotal(items) {
+  return (items || []).reduce((s, i) => s + (Number(i.amount) || 0), 0);
+}
+function calcServicesTotal(svcs) {
+  return (svcs || []).reduce((s, x) => s + (Number(x.amount) || 0), 0);
+}
+function calcContractTotal(c) {
+  return calcItemsTotal(c.items) + calcServicesTotal(c.services);
+}
+
+// ============================================================
+// Page Navigation
+// ============================================================
+function navigateTo(page, params) {
+  pageStack.push(currentPage);
+  currentPage = page;
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+  if (page === 'list') {
+    document.getElementById('page-list').classList.add('active');
+    renderContractList();
+  } else if (page === 'detail') {
+    currentDetailId = params?.id || 1;
+    document.getElementById('page-detail').classList.add('active');
+    renderDetail();
+  } else if (page === 'form') {
+    isEditMode = params?.edit || false;
+    editingContractId = params?.id || null;
+    document.getElementById('page-form').classList.add('active');
+    if (isEditMode && editingContractId) {
+      loadFormForEdit(editingContractId);
+      document.getElementById('formTitle').textContent = '编辑合同';
+      document.getElementById('formDeleteBtn').style.display = 'flex';
+    } else {
+      resetForm();
+      document.getElementById('formTitle').textContent = '新建合同';
+      document.getElementById('formDeleteBtn').style.display = 'none';
+    }
+  }
+  updateProtoTabs(page);
+}
+
+function navigateBack() {
+  if (pageStack.length === 0) return;
+  const prev = pageStack.pop();
+  currentPage = prev;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  if (prev === 'list') {
+    document.getElementById('page-list').classList.add('active');
+    renderContractList();
+  } else if (prev === 'detail') {
+    document.getElementById('page-detail').classList.add('active');
+    renderDetail();
+  }
+  updateProtoTabs(prev);
+}
+
+function navigateToEdit() {
+  navigateTo('form', { edit: true, id: currentDetailId });
+}
+
+function switchProtoPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  pageStack.length = 0;
+  currentPage = page;
+
+  if (page === 'list') {
+    document.getElementById('page-list').classList.add('active');
+    renderContractList();
+  } else if (page === 'detail') {
+    currentDetailId = 1;
+    document.getElementById('page-detail').classList.add('active');
+    renderDetail();
+  } else if (page === 'form') {
+    isEditMode = false;
+    editingContractId = null;
+    document.getElementById('page-form').classList.add('active');
+    document.getElementById('formTitle').textContent = '新建合同';
+    document.getElementById('formDeleteBtn').style.display = 'none';
+    resetForm();
+  } else if (page === 'form-edit') {
+    isEditMode = true;
+    editingContractId = 1;
+    document.getElementById('page-form').classList.add('active');
+    document.getElementById('formTitle').textContent = '编辑合同';
+    document.getElementById('formDeleteBtn').style.display = 'flex';
+    loadFormForEdit(1);
+  } else if (page === 'product-sheet') {
+    // Show form behind, open product sheet
+    document.getElementById('page-form').classList.add('active');
+    if (formState.items.length === 0) resetForm();
+    openProductSheet();
+  } else if (page === 'service-sheet') {
+    document.getElementById('page-form').classList.add('active');
+    if (formState.items.length === 0 && formState.services.length === 0) resetForm();
+    openServiceSheet();
+  }
+  updateProtoTabs(page);
+}
+
+function updateProtoTabs(activePage) {
+  document.querySelectorAll('.proto-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.page === activePage);
+  });
+}
+
+// ============================================================
+// List Page Rendering
+// ============================================================
+function renderContractList() {
+  const keyword = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+  let filtered = mockContracts;
+
+  if (statusFilter !== 'all') filtered = filtered.filter(c => c.status === statusFilter);
+  if (directionFilter !== 'all') filtered = filtered.filter(c => c.direction === directionFilter);
+  if (keyword) {
+    filtered = filtered.filter(c =>
+      c.contractNo.toLowerCase().includes(keyword) ||
+      (c.customerName || '').toLowerCase().includes(keyword)
+    );
+  }
+
+  const container = document.getElementById('cardList');
+  if (!container) return;
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#c5ccd6" stroke-width="1.5" stroke-linecap="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <div class="empty-title">${keyword || statusFilter !== 'all' || directionFilter !== 'all' ? '没有匹配的合同' : '暂无合同'}</div>
+        <div class="empty-desc">${keyword || statusFilter !== 'all' || directionFilter !== 'all' ? '试试其他筛选条件' : '点击右下角 + 创建第一份合同'}</div>
+      </div>
+    `;
+    return;
+  }
+
+  const statusLabelMap = { in_progress: '进行中', completed: '已完成', cancelled: '已取消' };
+  const dirLabelMap = { sale: '销售', purchase: '采购' };
+
+  container.innerHTML = filtered.map(c => {
+    const statusLabel = statusLabelMap[c.status] || c.status;
+    const dirClass = c.direction;
+    const dirLabel = dirLabelMap[c.direction];
+    const itemCount = (c.items || []).length;
+    const svcCount = (c.services || []).length;
+    const totalAmount = calcContractTotal(c);
+    const amountPrefix = c.direction === 'purchase' ? '-¥' : '¥';
+
+    return `
+      <div class="contract-card" onclick="navigateTo('detail', {id: ${c.id}})">
+        <div class="card-dir-bar ${dirClass}"></div>
+        <div class="card-header">
+          <span class="card-no">${c.contractNo}</span>
+          <span class="status-badge ${c.status}">${statusLabel}</span>
+        </div>
+        <div class="card-body">
+          <span class="card-customer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            ${c.customerName} · ${dirLabel}
+          </span>
+          <span class="card-amount ${dirClass === 'purchase' ? 'purchase-amount' : ''}">${amountPrefix}${fmtMoney(totalAmount)}</span>
+        </div>
+        <div class="card-footer">
+          <div class="card-summary">
+            <span class="summary-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              ${itemCount} 件商品
+            </span>
+            <span class="summary-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              ${svcCount} 项服务
+            </span>
+          </div>
+          <span class="card-date">签订：${c.date}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterContracts() { renderContractList(); }
+
+function toggleStatusFilter(el) {
+  document.querySelectorAll('.filter-chip[data-filter="status"]').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  statusFilter = el.dataset.value;
+  renderContractList();
+}
+
+function toggleDirFilter(el) {
+  document.querySelectorAll('.filter-chip[data-filter="direction"]').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  directionFilter = el.dataset.value;
+  renderContractList();
+}
+
+// ============================================================
+// Detail Page Rendering
+// ============================================================
+function renderDetail() {
+  const c = mockContracts.find(m => m.id === currentDetailId);
+  if (!c) return;
+
+  const statusLabelMap = { in_progress: '进行中', completed: '已完成', cancelled: '已取消' };
+  const statusLabel = statusLabelMap[c.status] || c.status;
+  const dirClass = c.direction;
+  const dirLabel = c.direction === 'sale' ? '销售合同' : '采购合同';
+  const itemsTotal = calcItemsTotal(c.items);
+  const svcsTotal = calcServicesTotal(c.services);
+  const totalAmount = calcContractTotal(c);
+  const amountPrefix = c.direction === 'purchase' ? '-¥' : '¥';
+
+  const container = document.getElementById('detailContent');
+  container.innerHTML = `
+    <!-- 状态横幅 -->
+    <div class="status-banner ${dirClass}">
+      <div class="banner-left">
+        <span class="banner-no">${c.contractNo}</span>
+        <div class="banner-meta">
+          <span class="status-badge ${c.status}">${statusLabel}</span>
+          <span class="dir-badge ${dirClass}">${dirLabel}</span>
+        </div>
+      </div>
+      <div class="banner-icon ${dirClass}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+    </div>
+
+    <!-- 基本信息 -->
+    <div class="info-card">
+      <div class="info-card-title">基本信息</div>
+      <div class="info-row">
+        <span class="info-label">客户</span>
+        <span class="info-value">${c.customerName}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">签订日期</span>
+        <span class="info-value">${c.date}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">合同期限</span>
+        <span class="info-value">${c.startDate} ~ ${c.endDate}</span>
+      </div>
+      ${c.note ? `<div class="info-row">
+        <span class="info-label">备注</span>
+        <span class="info-value" style="max-width:200px;">${c.note}</span>
+      </div>` : ''}
+    </div>
+
+    <!-- 商品明细 -->
+    <div class="info-card">
+      <div class="info-card-title">
+        <span>商品明细</span>
+        <span class="count-tag ${(c.items||[]).length === 0 ? 'zero' : ''}">${(c.items||[]).length} 件</span>
+      </div>
+      ${(c.items || []).length === 0 ? `
+        <div class="info-row">
+          <span class="info-value muted" style="width:100%;text-align:center;">暂无商品明细</span>
+        </div>
+      ` : c.items.map(it => `
+        <div class="item-row">
+          <div class="item-row-top">
+            <span class="item-name">${it.productName}</span>
+            <span class="item-amount">¥${fmtMoney(it.amount)}</span>
+          </div>
+          <div class="item-row-bottom">
+            <span class="item-meta-detail qty-price">
+              <span>数量 ${Math.round(it.quantity)}</span>
+              <span>单价 ¥${fmtMoney(it.actualPrice)}</span>
+            </span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- 服务费明细 -->
+    <div class="info-card">
+      <div class="info-card-title">
+        <span>服务费明细</span>
+        <span class="count-tag ${(c.services||[]).length === 0 ? 'zero' : ''}">${(c.services||[]).length} 项</span>
+      </div>
+      ${(c.services || []).length === 0 ? `
+        <div class="info-row">
+          <span class="info-value muted" style="width:100%;text-align:center;">暂无服务费明细</span>
+        </div>
+      ` : c.services.map(sv => `
+        <div class="item-row">
+          <div class="item-row-top">
+            <span class="item-name">${sv.serviceName}</span>
+            <span class="item-amount">¥${fmtMoney(sv.amount)}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- 金额汇总 -->
+    <div class="summary-card">
+      <div class="summary-row">
+        <span>商品小计</span>
+        <span class="summary-amount">¥${fmtMoney(itemsTotal)}</span>
+      </div>
+      <div class="summary-row">
+        <span>服务费小计</span>
+        <span class="summary-amount">¥${fmtMoney(svcsTotal)}</span>
+      </div>
+      <div class="summary-row total">
+        <span>合同合计</span>
+        <span class="summary-amount">${amountPrefix}${fmtMoney(totalAmount)}</span>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// Form Logic
+// ============================================================
+function resetForm() {
+  formState = {
+    customerId: null,
+    customerName: '',
+    direction: 'sale',
+    date: '2026-08-06',
+    status: 'in_progress',
+    note: '',
+    items: [],
+    services: [],
+  };
+  syncFormUI();
+}
+
+function loadFormForEdit(id) {
+  const c = mockContracts.find(m => m.id === id);
+  if (!c) return;
+  formState = {
+    customerId: c.customerId,
+    customerName: c.customerName,
+    direction: c.direction,
+    date: c.date,
+    status: c.status,
+    note: c.note || '',
+    items: JSON.parse(JSON.stringify(c.items || [])),
+    services: JSON.parse(JSON.stringify(c.services || [])),
+  };
+  syncFormUI();
+}
+
+function syncFormUI() {
+  document.getElementById('customerDisplay').textContent = formState.customerName || '请选择客户';
+  document.getElementById('customerDisplay').className = formState.customerName ? 'selected-value' : 'placeholder';
+  document.getElementById('directionInput').value = formState.direction;
+  document.getElementById('dateInput').value = formState.date;
+  document.getElementById('statusInput').value = formState.status;
+  document.getElementById('noteInput').value = formState.note;
+
+  renderFormItems();
+  renderFormServices();
+  updateFormTotal();
+}
+
+function renderFormItems() {
+  const container = document.getElementById('productItemsContainer');
+  if (formState.items.length === 0) {
+    container.innerHTML = `<div class="line-empty">暂无商品明细，点击下方按钮添加</div>`;
+    document.getElementById('itemCount').textContent = '0 件';
+    return;
+  }
+  container.innerHTML = formState.items.map((it, idx) => `
+    <div class="line-item" onclick="editProductItem(${idx})">
+      <div class="line-item-info">
+        <div class="line-item-name">${it.productName}</div>
+        <div class="line-item-detail">
+          <span>数量 ${Math.round(it.quantity)}</span>
+          <span class="sep">|</span>
+          <span>单价 ¥${fmtMoney(it.actualPrice)}</span>
+        </div>
+      </div>
+      <span class="line-item-amount">¥${fmtMoney(it.amount)}</span>
+      <div class="line-item-delete" onclick="event.stopPropagation(); deleteProductItem(${idx})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('itemCount').textContent = formState.items.length + ' 件';
+}
+
+function renderFormServices() {
+  const container = document.getElementById('serviceItemsContainer');
+  if (formState.services.length === 0) {
+    container.innerHTML = `<div class="line-empty">暂无服务费明细，点击下方按钮添加</div>`;
+    document.getElementById('serviceCount').textContent = '0 项';
+    return;
+  }
+  container.innerHTML = formState.services.map((sv, idx) => {
+    const refSvc = mockServices.find(s => s.id === sv.serviceId);
+    const refCost = refSvc ? refSvc.referenceCost : 0;
+    return `
+      <div class="line-item" onclick="editServiceItem(${idx})">
+        <div class="line-item-info">
+          <div class="line-item-name">${sv.serviceName}</div>
+          <div class="line-item-detail">
+            <span>参考 ¥${fmtMoney(refCost)}</span>
+          </div>
+        </div>
+        <span class="line-item-amount">¥${fmtMoney(sv.amount)}</span>
+        <div class="line-item-delete" onclick="event.stopPropagation(); deleteServiceItem(${idx})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('serviceCount').textContent = formState.services.length + ' 项';
+}
+
+function updateFormTotal() {
+  const total = calcContractTotal(formState);
+  document.getElementById('formTotalAmount').textContent = '¥' + fmtMoney(total);
+}
+
+function onDirectionChange() {
+  formState.direction = document.getElementById('directionInput').value;
+}
+
+// ============================================================
+// Customer Sheet
+// ============================================================
+function showCustomerSheet() {
+  const list = document.getElementById('customerList');
+  list.innerHTML = mockCustomers.map(c => `
+    <div class="product-item ${c.id === formState.customerId ? 'selected' : ''}" onclick="selectCustomer(${c.id}, '${c.name.replace(/'/g, "\\'")}')">
+      <div>
+        <div class="product-item-name">${c.name}</div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('customerSheet').classList.add('show');
+}
+
+function selectCustomer(id, name) {
+  formState.customerId = id;
+  formState.customerName = name;
+  syncFormUI();
+  closeSheet('customerSheet');
+}
+
+// ============================================================
+// Product Item Sheet
+// ============================================================
+function openProductSheet() {
+  editingProductIndex = -1;
+  currentSelectedProductId = null;
+  document.getElementById('productSheetTitle').textContent = '添加商品明细';
+  document.getElementById('productSearch').value = '';
+  document.getElementById('itemQty').value = '';
+  document.getElementById('itemPrice').value = '';
+  document.getElementById('itemSubtotal').textContent = '¥0.00';
+  renderProductList(mockProducts);
+  document.getElementById('productSheet').classList.add('show');
+}
+
+function editProductItem(idx) {
+  const it = formState.items[idx];
+  editingProductIndex = idx;
+  currentSelectedProductId = it.productId;
+  document.getElementById('productSheetTitle').textContent = '编辑商品明细';
+  document.getElementById('productSearch').value = '';
+  document.getElementById('itemQty').value = Math.round(it.quantity);
+  document.getElementById('itemPrice').value = it.actualPrice;
+  updateItemSubtotal();
+  renderProductList(mockProducts);
+  document.getElementById('productSheet').classList.add('show');
+}
+
+function deleteProductItem(idx) {
+  formState.items.splice(idx, 1);
+  renderFormItems();
+  updateFormTotal();
+}
+
+function renderProductList(products) {
+  const list = document.getElementById('productList');
+  if (products.length === 0) {
+    list.innerHTML = `<div class="product-list-empty">未找到匹配商品</div>`;
+    return;
+  }
+  list.innerHTML = products.map(p => `
+    <div class="product-item ${p.id === currentSelectedProductId ? 'selected' : ''}" onclick="pickProduct(${p.id})">
+      <div>
+        <div class="product-item-name">${p.name}</div>
+        <div class="product-item-meta">${p.brand} / ${p.unit}</div>
+      </div>
+      <div class="product-item-price">¥${fmtMoney(p.sale_price)}</div>
+    </div>
+  `).join('');
+}
+
+function filterProductList() {
+  const kw = document.getElementById('productSearch').value.trim().toLowerCase();
+  const filtered = mockProducts.filter(p => p.name.toLowerCase().includes(kw) || p.brand.toLowerCase().includes(kw));
+  renderProductList(filtered);
+}
+
+function pickProduct(pid) {
+  currentSelectedProductId = pid;
+  const p = mockProducts.find(x => x.id === pid);
+  if (p && !document.getElementById('itemPrice').value) {
+    document.getElementById('itemPrice').value = p.sale_price;
+  }
+  renderProductList(mockProducts);
+  updateItemSubtotal();
+}
+
+function updateItemSubtotal() {
+  const qty = parseFloat(document.getElementById('itemQty').value) || 0;
+  const price = parseFloat(document.getElementById('itemPrice').value) || 0;
+  document.getElementById('itemSubtotal').textContent = '¥' + fmtMoney(qty * price);
+}
+
+function confirmProductItem() {
+  if (!currentSelectedProductId) { showToast('请选择商品'); return; }
+  const qty = parseFloat(document.getElementById('itemQty').value) || 0;
+  const price = parseFloat(document.getElementById('itemPrice').value) || 0;
+  if (qty <= 0) { showToast('请输入数量'); return; }
+  if (price < 0) { showToast('金额不能为负'); return; }
+
+  const p = mockProducts.find(x => x.id === currentSelectedProductId);
+  const item = {
+    id: editingProductIndex >= 0 ? formState.items[editingProductIndex].id : Date.now(),
+    productId: p.id,
+    productName: p.name,
+    quantity: qty,
+    actualPrice: price,
+    amount: Number((qty * price).toFixed(2)),
+  };
+
+  if (editingProductIndex >= 0) {
+    formState.items[editingProductIndex] = item;
+  } else {
+    formState.items.push(item);
+  }
+
+  closeSheet('productSheet');
+  renderFormItems();
+  updateFormTotal();
+}
+
+// ============================================================
+// Service Item Sheet
+// ============================================================
+function openServiceSheet() {
+  editingServiceIndex = -1;
+  currentSelectedProductId = null;
+  document.getElementById('serviceSheetTitle').textContent = '添加服务费';
+  document.getElementById('serviceAmount').value = '';
+  document.getElementById('serviceRefCost').value = '';
+  document.getElementById('serviceSubtotal').textContent = '¥0.00';
+  renderServiceList(mockServices, null);
+  document.getElementById('serviceSheet').classList.add('show');
+}
+
+function editServiceItem(idx) {
+  const sv = formState.services[idx];
+  editingServiceIndex = idx;
+  document.getElementById('serviceSheetTitle').textContent = '编辑服务费';
+  document.getElementById('serviceAmount').value = sv.amount;
+  const refSvc = mockServices.find(s => s.id === sv.serviceId);
+  document.getElementById('serviceRefCost').value = refSvc ? refSvc.referenceCost : '';
+  updateServiceTotal();
+  renderServiceList(mockServices, sv.serviceId);
+  document.getElementById('serviceSheet').classList.add('show');
+}
+
+function deleteServiceItem(idx) {
+  formState.services.splice(idx, 1);
+  renderFormServices();
+  updateFormTotal();
+}
+
+function renderServiceList(services, selectedId) {
+  const list = document.getElementById('serviceList');
+  list.innerHTML = services.map(s => `
+    <div class="service-item ${s.id === selectedId ? 'selected' : ''}" onclick="pickService(${s.id})">
+      <div class="service-item-left">
+        <div class="service-radio"></div>
+        <div class="service-info">
+          <div class="service-name">${s.name}</div>
+          <div class="service-ref-cost">参考费用 ¥${fmtMoney(s.referenceCost)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function pickService(sid) {
+  currentSelectedProductId = sid;
+  const s = mockServices.find(x => x.id === sid);
+  if (s) {
+    document.getElementById('serviceRefCost').value = s.referenceCost;
+    if (!document.getElementById('serviceAmount').value) {
+      document.getElementById('serviceAmount').value = s.referenceCost;
+    }
+  }
+  renderServiceList(mockServices, sid);
+  updateServiceTotal();
+}
+
+function updateServiceTotal() {
+  const amt = parseFloat(document.getElementById('serviceAmount').value) || 0;
+  document.getElementById('serviceSubtotal').textContent = '¥' + fmtMoney(amt);
+}
+
+function confirmServiceItem() {
+  if (!currentSelectedProductId) { showToast('请选择服务'); return; }
+  const amt = parseFloat(document.getElementById('serviceAmount').value) || 0;
+  if (amt < 0) { showToast('费用不能为负'); return; }
+
+  const s = mockServices.find(x => x.id === currentSelectedProductId);
+  const item = {
+    id: editingServiceIndex >= 0 ? formState.services[editingServiceIndex].id : Date.now(),
+    serviceId: s.id,
+    serviceName: s.name,
+    amount: Number(amt.toFixed(2)),
+  };
+
+  if (editingServiceIndex >= 0) {
+    formState.services[editingServiceIndex] = item;
+  } else {
+    formState.services.push(item);
+  }
+
+  closeSheet('serviceSheet');
+  renderFormServices();
+  updateFormTotal();
+}
+
+function closeSheet(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// ============================================================
+// Submit
+// ============================================================
+function submitForm() {
+  if (!formState.customerId) { showToast('请选择关联客户'); return; }
+  if (formState.items.length === 0 && formState.services.length === 0) {
+    showToast('请至少添加一项商品或服务');
+    return;
+  }
+
+  const saveBtn = document.getElementById('formSaveBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = '保存中...';
+
+  setTimeout(() => {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '保存合同';
+    showToast(isEditMode ? '修改成功' : '创建成功');
+    setTimeout(() => navigateBack(), 600);
+  }, 800);
+}
+
+// ============================================================
+// Delete Modal
+// ============================================================
+function showDeleteModal() {
+  const c = mockContracts.find(m => m.id === currentDetailId);
+  if (c) document.getElementById('deleteContractNo').textContent = c.contractNo;
+  document.getElementById('deleteModal').classList.add('show');
+}
+function hideDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('show');
+}
+function confirmDelete() {
+  hideDeleteModal();
+  showToast('已删除');
+  const idx = mockContracts.findIndex(m => m.id === currentDetailId);
+  if (idx > -1) mockContracts.splice(idx, 1);
+  setTimeout(() => {
+    if (currentPage === 'detail' || currentPage === 'form' || currentPage === 'form-edit') {
+      navigateBack();
+    }
+    if (currentPage === 'list') renderContractList();
+  }, 500);
+}
+
+// ============================================================
+// Toast
+// ============================================================
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+// ============================================================
+// Init
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  renderContractList();
+});
+</script>
+
+</body>
+</html>

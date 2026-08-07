@@ -37,7 +37,8 @@ const taxCost = computed(() => getAmount(expenseCompose.value, '税金'))
 const totalExpense = computed(() => materialCost.value + processCost.value + miscCost.value + taxCost.value)
 // 现金支出 = 类型「现金支出」求和（PRD §4.1 L440 一等原始指标，由后端 getExpenseComposeByType 直接返回）
 const cashExpense = computed(() => getAmount(expenseCompose.value, '现金支出'))
-const payable = computed(() => props.cockpit.kpi.payable || 0)</script>
+const payable = computed(() => props.cockpit.kpi.payable || 0)
+</script>
 
 <template>
   <view class="mx-[24rpx] mb-[20rpx] bg-white rounded-[16rpx] border border-[#EEF1F6] overflow-hidden">
