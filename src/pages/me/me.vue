@@ -36,8 +36,13 @@ const assistMenus = [
   { key: 'contract', label: '合同管理', icon: 'i-carbon-document', path: '/pages/me/contract-list' },
 ]
 
+const peopleMenus = [
+  { key: 'employee', label: '员工信息', icon: 'i-carbon-group', path: '/pages/me/employee-list' },
+  { key: 'employee-history', label: '入离职记录', icon: 'i-carbon-user-avatar', path: '/pages/me/employee-history' },
+  { key: 'workhours', label: '工时工资', icon: 'i-carbon-chart-line-data', path: '/pages/me/workhours-salary' },
+]
+
 const pcMenus = [
-  { key: 'employee', label: '员工管理', icon: 'i-carbon-group' },
   { key: 'setting', label: '经营设置', icon: 'i-carbon-settings' },
 ]
 
@@ -91,6 +96,24 @@ function handleLogout() {
       <view class="group">
         <view
           v-for="m in assistMenus"
+          :key="m.key"
+          class="cell"
+          hover-class="cell-hover"
+          @click="goPage(m.path)"
+        >
+          <text class="cell-icon" :class="m.icon" />
+          <text class="cell-label">{{ m.label }}</text>
+          <text class="i-carbon-chevron-right cell-arrow" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 人员管理 -->
+    <view class="section">
+      <view class="section-label">人员管理</view>
+      <view class="group">
+        <view
+          v-for="m in peopleMenus"
           :key="m.key"
           class="cell"
           hover-class="cell-hover"

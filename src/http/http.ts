@@ -235,14 +235,30 @@ export function httpDelete<T>(url: string, query?: Record<string, any>, header?:
   })
 }
 
+/**
+ * PATCH 请求
+ */
+export function httpPatch<T>(url: string, data?: Record<string, any>, query?: Record<string, any>, header?: Record<string, any>, options?: Partial<CustomRequestOptions>) {
+  return http<T>({
+    url,
+    data,
+    query,
+    method: 'PATCH',
+    header,
+    ...options,
+  })
+}
+
 // 支持与 axios 类似的API调用
 http.get = httpGet
 http.post = httpPost
 http.put = httpPut
 http.delete = httpDelete
+http.patch = httpPatch
 
 // 支持与 alovaJS 类似的API调用
 http.Get = httpGet
 http.Post = httpPost
 http.Put = httpPut
 http.Delete = httpDelete
+http.Patch = httpPatch
